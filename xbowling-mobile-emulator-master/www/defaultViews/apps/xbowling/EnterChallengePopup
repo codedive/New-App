@@ -1,0 +1,404 @@
+<script type="text/javascript">
+    (function (enterChallengePopup) {
+        enterChallengePopup.viewModel = function (bowlingGameId, inGameScreenViewModel, isManualInput) {
+            this.isManualInput = ko.observable(isManualInput);
+            this.bowlingGameId = ko.observable(bowlingGameId);
+            this.challenges = ko.mapping.fromJS([]);
+            this.loading = ko.observable(true);
+            this.inGameScreenViewModel = ko.observable(inGameScreenViewModel);
+            this.anyPostedHeadToHeadEntered = ko.computed(function () {
+                var challengers = this.inGameScreenViewModel().challengers();
+                if (challengers && challengers.length > 0)
+                    return true;
+            }, this);
+            this.anyHeadToHeadEntered = ko.computed(function () {
+                if (this.inGameScreenViewModel().liveCompetitionId() > 0)
+                    return true;
+
+                if (this.anyPostedHeadToHeadEntered())
+                    return true;
+
+                return false;
+            }, this);
+            this.anyChallengesEntered = ko.computed(function () {
+                if (this.anyHeadToHeadEntered())
+                    return true;
+
+                var c = this.challenges();
+                for (var i = 0; i < c.length; i++) {
+                    if (c[i].isEntered()) {
+                        return true;
+                    }
+                }
+            }, this);
+        },
+
+        enterChallengePopup.load = function () {
+            var elm = jQuery(this);
+            var popupViewModel = scn.popup.getViewModel(elm);
+
+            var viewModel = new enterChallengePopup.viewModel(popupViewModel.bowlingGameId, popupViewModel.inGameScreenViewModel, popupViewModel.isManualInput);
+
+            jQuery("#enter-challenge-popup-credits", elm).text(scn.views.footer.getCurrentCredits());
+
+            // load challenges
+            scn.ajax({
+                url: scn.apiAddress + "bowlingchallenge",
+                type: "GET",
+                data: { bowlingGameId: viewModel.bowlingGameId() },
+                dataType: "json",
+                success: function (data) {
+                    viewModel.loading(false);
+
+                    var newData = [];
+                    for (var i = 0; i < data.length; i++) {
+                        // if turkey challenge and not available, hide it completely
+                        if (!data[i].isAvailable && (data[i].challenge.challengeUId.toUpperCase() == "72EE14A9-AF3E-49ED-971B-AA353A81576C"
+                            || data[i].challenge.challengeUId.toUpperCase() == "B7F606E6-4ECC-47E1-B76D-2A2C7E965104")) {
+                            // don't add it
+                        } else {
+                            newData.push(data[i]);
+                        }
+                    }
+
+                    ko.mapping.fromJS(newData, viewModel.challenges);
+
+                    var scroller = jQuery("#enter-challenge-popup-scroller", elm);
+                    scroller.height(scn.popup.getHeight(elm) - 76);
+                    var is = jQuery(scroller.children()[0]).height((75 * newData.length) + 200);
+
+                    var scroll = new iScroll(scroller.get(0), {
+                        snap: false,
+                        momentum: true,
+                        hScroll: false,
+                        hScrollbar: false,
+                        vScroll: true,
+                        vScrollbar: false
+                    });
+
+                    scn.popup.registerPopupDestructor(elm, function () {
+                        if (scroll) {
+                            scroll.destroy();
+                            scroll = null;
+                        }
+                    });
+
+                },
+                error: function (jqXhr, txtStatus) {
+                    alert("Oops!  An error occurred loading available challenges.  Please try again later!");
+                    scn.popup.close(elm);
+                }
+            });
+
+            ko.applyBindings(viewModel, elm.get(0));
+
+            if (!localStorage.getItem("scn-xbowling-sawchallengelegalwarning")) {
+                // check legal to see if we need to warn users about anything
+                scn.legal.checkBeforeShowingChallenges();
+                localStorage.setItem("scn-xbowling-sawchallengelegalwarning", true);
+            }
+        },
+
+        enterChallengePopup.confirm = function () {
+            var elm = jQuery(this.element);
+            
+            if (elm.data("in-confirm")) {
+                enterChallengePopup.enterChallenge.call(this);
+            } else {
+                elm.removeClass("clean-gray")
+                   .addClass("green-buy-button")
+                   .text("CONFIRM");
+                elm.data("in-confirm", true);
+            }
+        },
+
+        doEnterChallenge = function (elm) {
+            var challengeView = ko.dataFor(elm.get(0));
+            var challenge = challengeView.challenge;
+
+            if (!scn.legal.checkChallengeEntry(challenge.creditCost())) {
+                return false;
+            }
+
+            elm.text("PENDING");
+
+            var popupElm = elm.parents("#popup:first");
+            var parentViewModel = ko.dataFor(popupElm.get(0));
+
+            var viewModel = {
+                bowlingGame: { id: parentViewModel.bowlingGameId() },
+                challenge: { id: challenge.id, challengeUId: challenge.challengeUId() },
+                properties: []
+            };
+
+            var afterAdditionalProcessing = function () {
+                // branch for 
+                scn.ajax({
+                    url: scn.apiAddress + "bowlingchallenge/enter",
+                    type: "POST",
+                    data: viewModel,
+                    success: function (data) {
+                        challengeView.isEntered(true);
+                        challengeView.isAvailable(false);
+                        scn.views.footer.increaseCredits(-challenge.creditCost());
+                    },
+                    error: function (jqXhr, txtStatus) {
+                        if (jqXhr.status == 402) {
+                            confirm("You do not have enough credits to enter the " + challenge.name() + " challenge.  Do you want to purchase more credits now?", {
+                                title: "Uh oh!",
+                                callback: function (r) {
+                                    if (r === NOTIFICATION_BUTTONS.OK) {
+                                        scn.popup.show("BuyMoreCredits", {
+                                            callback: function (callbackViewModel) {
+                                                if (callbackViewModel && callbackViewModel.purchaseMade) {
+                                                    // try again
+                                                    doEnterChallenge(elm);
+                                                }
+                                            },
+                                            height: "auto"
+                                        });
+                                    }
+                                }
+                            });
+                        } else {
+                            alert("An error occurred entering you into the " + challenge.name() + " challenge.  Please try again later.");
+                        }
+
+                        jQuery("button", elm.parent()).toggle();
+                    }
+                });
+            };
+
+            var challengeUIdString = challenge.challengeUId().toUpperCase();
+            if (additionalEnterProcessing[challengeUIdString] && typeof (additionalEnterProcessing[challengeUIdString]) == "function") {
+                additionalEnterProcessing[challengeUIdString].call(
+                    viewModel,
+                    function (response) {
+                        if (response) {
+                            afterAdditionalProcessing();
+                        } else {
+                            elm.text("CONFIRM");
+                        }
+                    }
+                );
+            } else {
+                afterAdditionalProcessing();
+            }
+        },
+
+        enterChallengePopup.enterChallenge = function () {
+            doEnterChallenge(jQuery(this.element));
+        },
+
+        enterChallengePopup.closePopup = function () {
+            scn.popup.hide(this);
+        },
+
+        enterChallengePopup.showInfo = function () {
+            var challengeView = ko.dataFor(this.element);
+
+            var options = {
+                viewModel: challengeView.challenge,
+                height: "auto"
+            };
+
+            if (challengeView.challenge.challengeUId().toUpperCase() === 'B7F606E6-4ECC-47E1-B76D-2A2C7E965104'
+                || challengeView.challenge.challengeUId().toUpperCase() === '72EE14A9-AF3E-49ED-971B-AA353A81576C') {
+                options.additionalClass = "popup-turkey-promotion";
+                options.closeButtonAdditionalClass = "close-btn-20-tan";
+            }
+
+            scn.popup.show("ChallengePopup", options);
+        },
+
+        additionalEnterProcessing = {
+            // pick your score
+            "BD7A69ED-6C8A-4718-B7E0-526186A2F18B": function (callback) {
+                var that = this;
+                prompt("", {
+                    title: "Which score do you think you will hit?",
+                    callback: function (score) {
+                        if (score === null) {
+                            // canceled
+                            callback.call(this, false);
+                        }
+
+                        var score = parseInt(score);
+
+                        if (isNaN(score) || score < 1 || score > 300) {
+                            alert("Please enter a Score between 1 and 300!", { title: "Invalid Score" });
+                            callback.call(this, false);
+                        } else {
+                            // valid
+                            that.properties.push({
+                                name: "Score",
+                                value: score
+                            });
+
+                            callback.call(this, true);
+                        }
+                    }
+                });
+            },
+            "72EE14A9-AF3E-49ED-971B-AA353A81576C": function (callback) {
+                // TURKEY CHALLENGE
+                // manul input, show them message
+                confirm("Since you are not bowling at an XBowling enabled center, in order to be eligible to win, we kindly ask you to send us a printout from the scoring system to verify your score. Please see full rules at www.XBowling.com.", {
+                    title: "Just so you know...",
+                    callback: function (r) {
+                        if (r === NOTIFICATION_BUTTONS.OK) {
+                            callback.call(this, true);
+                        } else {
+                            callback.call(this, false);
+                        }
+                    }
+                });
+            }
+        },
+
+        enterChallengePopup.challengeOthersTap = function () {
+            var elm = jQuery(this);
+            var elmViewModel = ko.dataFor(elm.get(0));
+
+            var popupViewModel = scn.popup.getViewModel(elm);
+            popupViewModel.anyPostedHeadToHeadEntered = elmViewModel.anyPostedHeadToHeadEntered();
+
+            scn.popup.show("EnterChallengeOpponentsPopup", {
+                viewModel: popupViewModel,
+                callback: function (data) {
+                    if (data) {
+                        elmViewModel.anyHeadToHeadEntered(true);
+                    }
+                },
+                height: "auto"
+            });
+
+            /*setTimeout(function () {
+                scn.popup.hide(elm);
+            }, 100);*/
+        }
+    }(window.scn.views.enterChallengePopup = window.scn.views.enterChallengePopup || {}));
+</script>
+
+<div id="popup" data-load="scn.views.enterChallengePopup.load" style="height: 165px">
+    <div class="popup-header">
+        <div class="centered-container">
+            <span class="medium">Select Challenges</span>
+        </div>
+    </div>
+
+    <div id="challenge-popup-all" style="width:100%;">
+        <div class="select-a-challenge-container">
+            <div>
+                <p class="single-line">
+                    Legends Made Here!
+                </p>
+            
+                <div class="challenge-more-credits-container">
+                    <div class="coin-plus-credits-container">
+                    
+                        <div class="xcoin">
+                            <img src="xcoin.png" /></div>
+                        <div class="footer-inset-numeric credits" id="enter-challenge-popup-credits" data-autoupdate="credits"></div>
+                    </div>
+                </div>
+
+                <button class="green-buy-button no-float" data-popup="BuyMoreCredits" data-popup-height="275">
+                    <span class="call-to-action">Buy Credits</span>
+                </button>
+            </div>
+        </div>
+
+        <h1 data-bind="visible: loading, delayShowOnBind: 500" class="hidden">Loading Challenges.  Please wait...</h1>
+        <h2 data-bind="visible: !loading() && challenges().length == 0" class="light-text centered">You have entered all available challenges!  Good luck!</h2>
+
+        <div class="all-challenge-container" id="enter-challenge-popup-scroller" data-bind="visible: !loading()">
+            <div>
+                <div style="width: 425px; margin: auto;">
+                    
+                    <!-- ko foreach: challenges -->
+
+                    <div class="single-challenge-container" data-challengecontainer="true" data-bind="tap: scn.views.enterChallengePopup.showInfo" data-tap-alloweventbubble="true">
+
+                        <div data-bind="css: 'challenge-icon ' + challenge.color().toLowerCase() + '-challenge-button'">
+                            <div data-bind="css: 'icon challenge-' + challenge.name().toLowerCase().replace(/\s/g, '-')"></div>
+                        </div>
+
+
+                        <div class="challenge-desc-container">
+                            <h1 data-bind="text: challenge.name()"></h1>
+                            <p data-bind="text: (challenge.shortDescription() ? challenge.shortDescription() + ' ' : '') + 'Tap for details.'"></p>
+                        </div>
+
+                        <div class="challenge-popup-cost-container">
+                            <img class="credit-icon" src="xcoin.png" />
+                            <span class="prize-cost" data-bind="text: challenge.creditCost()"></span>
+                        </div>
+
+                        <div class="buy-challenge-container" data-bind="visible: !isEntered() && isAvailable()">
+                            <button class="clean-gray" data-bind="tap: scn.views.enterChallengePopup.confirm" data-tap-alloweventbubble="true">
+                                ENTER
+                            </button>
+                        </div>
+                        <div class="buy-challenge-container purchased-challenge-info" data-bind="visible: isEntered">
+                                ENTERED
+                        </div>
+                    </div>
+
+                    <!-- /ko -->
+
+
+                    <div class="single-challenge-container" data-challengecontainer="true" data-tap="scn.views.enterChallengePopup.challengeOthersTap" data-tap-alloweventbubble="true" data-bind="visible: !isManualInput(), css: { 'no-border': anyChallengesEntered() }">
+                        <div data-bind="css: 'challenge-icon purple-challenge-button'">
+                            <div class="light-text" style="font-size: 20px; font-weight: bold; margin: 6px 0;">H2H</div>
+                        </div>
+                    
+                        <div class="challenge-desc-container">
+                            <h1>Head 2 Head</h1>
+                            <p>Challenge other XBowlers! Tap for details.</p>
+                        </div>
+
+                        <div class="challenge-popup-cost-container">
+                            <img class="credit-icon" src="xcoin.png" />
+                            <span class="prize-cost" style="font-size: 10px; margin-top: 3px">VARIES</span>
+                        </div>
+
+                        <div class="buy-challenge-container">
+                            <button class="clean-gray" data-tap="scn.views.enterChallengePopup.challengeOthersTap" data-bind="text: anyHeadToHeadEntered() ? 'ENTER MORE' : 'ENTER'">
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="single-challenge-container no-border" data-challengecontainer="true" data-bind="visible: !anyChallengesEntered()">
+                        <div data-bind="css: 'challenge-icon green-challenge-button'">
+                            <div class="light-text" style="font-size: 28px; font-weight: bold; margin: 2px 0 0 1px;">XB</div>
+                        </div>
+                    
+                        <div class="challenge-desc-container">
+                            <h1>XBowl for Free</h1>
+                            <p>Track your scores and earn leaderboard status!</p>
+                        </div>
+
+                        <div class="challenge-popup-cost-container">
+                            <img class="credit-icon" src="xcoin.png" />
+                            <span class="prize-cost" style="font-size: 13px; margin-top: 1px">FREE</span>
+                        </div>
+
+                        <div class="buy-challenge-container">
+                            <button class="clean-gray" data-tap="scn.views.enterChallengePopup.closePopup">
+                                ENTER
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="button-container" data-bind="visible: anyChallengesEntered" style="float: right; margin-top:15px !important" data-tap="scn.views.enterChallengePopup.closePopup">
+                        <div style="margin: auto;" class="in-game-button green-general-button" >
+                            <span>Ready to XBowl!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

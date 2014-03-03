@@ -1,0 +1,112 @@
+<script type="text/javascript">
+    (function (turkeyChallengeInfoPopup) {
+        turkeyChallengeInfoPopup.showRules = function () {
+            var w = window.open("http://www.xbowling.com/TurkeyChallenge.html", "_blank", "location=no");
+            scn.injectWindowLoadingMessage(w, "Please wait...", "Loading");
+        },
+
+        turkeyChallengeInfoPopup.load = function () {
+            var elm = jQuery(this);
+            var scrollElm = jQuery("#turkey-challenge-info-popup-scroll", elm);
+            scrollElm.height(scn.popup.getHeight(elm) - 50);
+            var mainScroll = new iScroll(scrollElm.get(0), {
+                snap: false,
+                momentum: true,
+                hScroll: false,
+                hScrollbar: false,
+                vScroll: true,
+                vScrollbar: false
+            });
+            scn.viewEngine.registerViewDestructor(function () {
+                if (mainScroll) {
+                    mainScroll.destroy();
+                    mainScroll = null;
+                }
+            });
+
+        },
+
+        isTurkeyChallengeActive = function () {
+            var date = new Date();
+            if (date < new Date("2013-11-19")) {
+                alert("The Turkey Challenge starts on November 19! Check back then for your chance to win!", { title: "Hang On!" });
+                return false;
+            } else if (date >= new Date("2013-11-25")) {
+                alert("The Turkey Challenge is over for this year! Check out the Turkey Challenge leaderboard to see the winners!", { title: "Oh No!" });
+                return false;
+            }
+
+            return true;
+        },
+
+        turkeyChallengeInfoPopup.xbowlNowTap = function () {
+            if (isTurkeyChallengeActive()) {
+                scn.popup.hide(this);
+                scn.views.landing.playNowTap();
+            }
+        },
+
+        turkeyChallengeInfoPopup.submitVideoTap = function () {
+            if (isTurkeyChallengeActive()) {
+                scn.popup.hide(this);
+                scn.popup.show("TurkeyChallengeSubmitPopup", {
+                    additionalClass: "popup-turkey-promotion",
+                    closeButtonAdditionalClass: "close-btn-20-tan",
+                    height: "auto"
+                });
+            }
+        },
+
+        turkeyChallengeInfoPopup.showVideo = function () {
+            var w = window.open('http://www.youtube.com/watch?v=ZUo2toEiDQg', '_blank', 'location=no');
+            scn.injectWindowLoadingMessage(w, "Please wait...", "Loading");
+        }
+    }(window.scn.views.turkeyChallengeInfoPopup = window.scn.views.turkeyChallengeInfoPopup || {}));
+
+</script>
+<div id="popup" class="light-text" style="font-weight: bold;" data-load="scn.views.turkeyChallengeInfoPopup.load">
+    <div class="popup-header turkey-challenge"><div class="centered-container">
+        <span id="handicap-info-popup-title"><img src="turkey-challenge-title.png" /></span></div>
+    </div>
+    <div id="turkey-challenge-info-popup-scroll" style="margin-top: 40px; padding: 5px;">
+        <div style="height: 625px">
+            <div style="width: 225px; margin: auto;">
+                <div class="button-container">
+                    <div class="medium-button tan-general-button" data-tap="scn.views.turkeyChallengeInfoPopup.xbowlNowTap">
+                        <span class="two-line-text">XBowl For<br />Turkeys!</span>
+                    </div>
+                </div>
+                <div class="button-container">
+                    <div class="medium-button tan-general-button" data-tap="scn.views.turkeyChallengeInfoPopup.submitVideoTap">
+                        <span class="two-line-text">Submit Your<br />Video!</span>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <br />
+            <p>Watch the XBowling Turkey Challenge video <span style="color: #1773B1; font-weight: bold;" data-tap="scn.views.turkeyChallengeInfoPopup.showVideo">here</span>!</p>
+            <p>What does the Turkey say?  That's right - Gobble, Gobble! It's TURKEY CHALLENGE time with XB, and we are sure you will have a gobble of a time with this special holiday Challenge!</p>
+            <p>Make sure you enter into the Inaugural 2013 Turkey Challenge through the XBowling App from Tuesday, November 19 until Sunday, November 24 for a chance to win your own Thanksgiving turkey.   You can bowl at any bowling center to participate!</p>
+            <p>We are offering XBowlers 2 exciting ways to win during the promotion period:</p>
+            <p>1. Top 10 XBowlers with the most turkeys bowled
+                <br />
+               2. Top 5 XBowler Thanksgiving-themed bowling videos submitted to XBowling as judged by fellow XBowlers
+            </p>
+            <p>The 15 lucky winners of the Turkey Challenge will each win a free $75 gift card to HoneyBaked Ham.</p>
+            <p>See the detailed rules of the Turkey Challenge <span style="color: #1773B1; font-weight: bold;" data-tap="scn.views.turkeyChallengeInfoPopup.showRules">here</span>.</p>
+            <p>So enter into the Turkey Challenge with XB, gobble till you can't wobble, and share with your friends and family!</p>
+            <div style="width: 225px; margin: auto;">
+                <div class="button-container">
+                    <div class="medium-button tan-general-button" data-tap="scn.views.turkeyChallengeInfoPopup.xbowlNowTap">
+                        <span class="two-line-text">XBowl For<br />Turkeys!</span>
+                    </div>
+                </div>
+                <div class="button-container">
+                    <div class="medium-button tan-general-button" data-tap="scn.views.turkeyChallengeInfoPopup.submitVideoTap">
+                        <span class="two-line-text">Submit Your<br />Video!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

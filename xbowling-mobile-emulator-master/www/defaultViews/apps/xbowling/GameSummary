@@ -1,0 +1,211 @@
+<script type="text/javascript">
+    (function (gameSummary) {
+        gameSummary.load = function () {
+            var elm = jQuery(this);
+
+            var popupViewModel = scn.popup.getViewModel(elm);
+
+            scn.showLoading();
+
+            if (popupViewModel.isManualInput) {
+                jQuery("#competition-buttons", elm).addClass("hidden");
+            }
+
+            scn.ajax({
+                url: scn.apiAddress + "bowlingchallenge/results",
+                type: "GET",
+                data: { gameId: popupViewModel.bowlingGameId },
+                dataType: "json",
+                success: function (data) {
+                    scn.hideLoading();
+                    var viewModel = ko.mapping.fromJS(data);
+                    ko.applyBindings(viewModel, elm.get(0));
+
+                    var contentScroll = jQuery("#summary-content", elm);
+
+                    var height = 50;
+                    for (var i = 0; i < data.length; i++) {
+                        height += 95;
+                        
+                        if (data[i].challenge.challengeUId.toUpperCase() == "64951A68-C83A-4275-924F-E7EFCD5E3AF2"
+                            || data[i].challenge.challengeUId.toUpperCase() == "ED34A529-0039-43CA-80FE-44B7F684B992") {
+                            height += 245;
+                        }
+                    }
+                    contentScroll.children(":first").height(height);
+
+                    var mainScroll = new iScroll(contentScroll.get(0), {
+                        snap: false,
+                        momentum: true,
+                        hScroll: false,
+                        hScrollbar: false,
+                        vScroll: true,
+                        vScrollbar: true
+                    });
+                    scn.popup.registerPopupDestructor(elm, function () {
+                        if (mainScroll) {
+                            mainScroll.destroy();
+                            mainScroll = null;
+                        }
+                    });
+                    mainScroll.refresh();
+                },
+                error: function () {
+                    scn.hideLoading();
+
+                    jQuery("#stats-loading-message", elm).text("An error occurred loading your statistics.  Please try again later.");
+                }
+            });
+
+        },
+
+        gameSummary.getStateText = function (state) {
+            switch (state) {
+                case "Entered":
+                    return "In Progress";
+
+                default:
+                    return state;
+            }
+        },
+
+        gameSummary.getXBowlManiaPoints = function (points) {
+            if (points > 0) {
+                return points + " Points";
+            } else {
+                return "...Pending";
+            }
+        },
+
+        gameSummary.selectAChallengeTap = function () {
+            var elm = this.element;
+
+            var popupViewModel = scn.popup.getViewModel(elm);
+
+            scn.popup.show("EnterChallengePopup", {
+                viewModel: {
+                    bowlingGameId: popupViewModel.bowlingGameId,
+                    inGameScreenViewModel: popupViewModel.inGameScreenViewModel,
+                    isManualInput: popupViewModel.isManualInput
+                },
+                height: 240
+            });
+            scn.popup.hide(elm);
+        },
+
+        gameSummary.viewPostedGamesTap = function () {
+            var popupViewModel = scn.popup.getViewModel(this);
+            popupViewModel.inGameScreenViewModel.tab("challenger-tab");
+            scn.popup.hide(this);
+        },
+
+        gameSummary.viewLiveGamesTap = function () {
+            var popupViewModel = scn.popup.getViewModel(this);
+            popupViewModel.inGameScreenViewModel.tab("tab-4");
+            scn.popup.hide(this);
+        }
+    }(window.scn.views.gameSummary = window.scn.views.gameSummary || {}));
+</script>
+<div id="stats" data-load="scn.views.gameSummary.load">
+    <div id="popup">
+        <div class="popup-header">
+            <div class="centered-container">
+                <span>Challenges</span>
+            </div>
+        </div>
+ 
+        <div id="stats-loading-message" class="centered light-text" style="margin: 50px 0;" data-bind="visible: false">
+            Loading your challenge summary. Please wait...
+        </div>
+
+        <div class="content hundred-percent-width" id="summary-content" data-bind="showOnBind: true" style="height: 225px; margin-top: 15px">
+            <div id="summary-content-scroller">
+                <div class="stats-container centered light-text hidden" data-bind="showOnBind: true, if: $data.length == 0" style="margin-top: 10px">
+                    It looks like you haven't entered any challenges yet!  Tap the button below to get started.
+                    <div class="green-challenge-button" data-bind="tap: scn.views.gameSummary.selectAChallengeTap" style="height: 40px; width: 160px; padding-top: 10px; margin: 10px auto;">
+                        <div style="text-shadow: 0 -1px 0 #000; color: #fff; text-transform: uppercase; font-weight: bold; font-size: 17px; text-align: center; width: 100%; margin: 0 auto; line-height: 14px;">
+                            SELECT A CHALLENGE
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-container hidden" data-bind="foreach: $data, showOnBind: true">
+                    <table data-bind=""> <!-- XBowl Mania -->
+                        <tr class="no-border">
+                            <td class="new-section">
+                                <div data-bind="css: 'challenge-icon ' + challenge.color().toLowerCase() + '-challenge-button'" style="height: 50px; width: 50px; float: left;margin: 5px auto;
+padding: 6px;border-radius: 5px;">
+                                    <div data-bind="css: 'icon challenge-' + challenge.name().toLowerCase().replace(/\s/g, '-')" style="background-size: contain; height: 50px"></div>
+                                </div>
+                                <div style="float: left; margin-left: 5px">
+                                    <div data-bind="text: challenge.name" style="font-size: 22px;"></div>
+                                    <span data-bind="visible: challenge.challengeUId().toUpperCase() != 'B7F606E6-4ECC-47E1-B76D-2A2C7E965104' && challenge.challengeUId().toUpperCase() != '72EE14A9-AF3E-49ED-971B-AA353A81576C'">
+                                        <span data-bind="visible: totalPoints() > 0 && challengeState() == 'Entered', text: 'You\'ve won ' + scn.addCommas(totalPoints()) + ' points so far!'" style="font-size: 14px; color: yellow;"></span>
+                                        <span data-bind="visible: totalPoints() > 0 && challengeState() == 'Won', text: 'You won ' + scn.addCommas(totalPoints()) + ' points!'" style="font-size: 14px; color: yellow;"></span>
+                                        <span data-bind="visible: totalPoints() == 0 && challengeState() == 'Entered'" style="font-size: 14px">In Progress...</span>
+                                        <span data-bind="visible: totalPoints() == 0 && challengeState() != 'Won' && challengeState() != 'Entered'" style="font-size: 14px">You didn't win.  Better luck next time!</span>
+                                    </span>
+                                    <span data-bind="visible: challenge.challengeUId().toUpperCase() === 'B7F606E6-4ECC-47E1-B76D-2A2C7E965104' || challenge.challengeUId().toUpperCase() === '72EE14A9-AF3E-49ED-971B-AA353A81576C'" style="font-size: 14px; color: yellow;">You are entered into the Turkey Challenge!</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- ko if: challenge.challengeUId().toUpperCase() == '64951A68-C83A-4275-924F-E7EFCD5E3AF2' || challenge.challengeUId().toUpperCase() == 'ED34A529-0039-43CA-80FE-44B7F684B992' -->
+                        <tr>
+                            <td class="sub">Frame 1</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[0])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 2</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[1])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 3</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[2])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 4</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[3])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 5</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[4])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 6</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[5])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 7</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[6])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 8</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[7])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 9</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[8])"></td>
+                        </tr>
+                        <tr>
+                            <td class="sub">Frame 10</td>
+                            <td data-bind="text: scn.views.gameSummary.getXBowlManiaPoints(framePoints()[9])"></td>
+                        </tr>
+                        <!-- /ko -->
+                    </table>
+                </div>
+                <div class="all-button-container" id="competition-buttons" style="text-align: center; width: 50%; margin: auto;">
+                    <div class="button-container" data-tap="scn.views.gameSummary.viewPostedGamesTap">
+                        <div class="medium-button purple-general-button">
+                            <span class="two-line-text">View Posted Games</span>
+                        </div>
+                    </div>
+
+                    <div class="button-container">
+                        <div class="medium-button green-general-button no-margin" data-tap="scn.views.gameSummary.viewLiveGamesTap">
+                            <span class="two-line-text">View Live Games</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>xbowling</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+
+    <script type="text/javascript">
+        window.onerror = function(message, url, lineNumber) {
+            console.log("Error: "+message+" in "+url+" at line "+lineNumber);
+        }
+        
+        window.scn = window.scn || {};
+        scn.apiAddress = "http://api.local.xbowling.com/";
+        scn.mobileAddress = "http://app.local.xbowling.com/";
+		window.templates = {};
+        
+        try {
+            scn.chromeEmulator = (window.navigator.userAgent.indexOf("Chrome") > -1) && (window.navigator.platform == "Win32");
+        } catch (ex) {
+            scn.chromeEmulator = false;
+        }
+    </script>
+	<script type="text/javascript">
+		// set path vars...used in zip.js
+		INFLATE_JS_PATH = "js/plugins/zip/inflate.js"; 
+		DEFLATE_JS_PATH = "js/plugins/zip/deflate.js";
+	</script>
+    <script type="text/javascript" src="js/plugins/zip/inflate.js"></script>
+    <script type="text/javascript" src="js/plugins/zip/deflate.js"></script>
+	<script type="text/javascript" src="js/plugins/zip/zip.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/plugins/PushNotification.js"></script>
+    <script type="text/javascript" src="js/plugins/InAppPurchaseManager.js"></script>
+    <script type="text/javascript" src="js/plugins/cdv-plugin-fb-connect.js"></script>
+    <script type="text/javascript" src="js/plugins/facebook-js-sdk.js"></script>
+    <script type="text/javascript" src="js/plugins/OAuth.js"></script>
+    <script type="text/javascript" src="js/plugins/Twitter.js"></script>
+    <script type="text/javascript" src="js/plugins/FileHelperPlugin.js"></script>
+    <script type="text/javascript" src="js/jquery-2.0.0.js"></script>
+    <script type="text/javascript" src="js/scn.push.js"></script>
+    <script type="text/javascript" src="js/scn.bootstrapper.js"></script>
+    <script type="text/javascript" src="js/scn.openhandler.js"></script>
+    
+    <script type="text/javascript">
+        document.addEventListener("offline", onOffline, false);
+        document.addEventListener("online", onOnline, false);
+        document.addEventListener("deviceready", onDeviceReady, false);
+		
+        var apiKeys =
+            {'iPhone' : '158478DC73FA498DB5D29BF13E9033F5',
+			 'iOS'    : '158478DC73FA498DB5D29BF13E9033F5',
+             'iPad'   : '8E0E751BF3B647B4B27C761805B3AECE',
+             'Android': '9E54C359216B4A51B34A7E83068E210C',
+             'WinCE'  : '87AB47B7851F4389A7486BD4E5347757'};
+     
+        var isOnline = false;
+        
+        function onDeviceReady() { 
+            console.log("deviceready");
+            setupApp();
+            scn.bootstrapper.onDeviceReady();
+        }
+        
+        var appSetupComplete = false;
+        function setupApp() {
+            scn.apiKey = apiKeys[device.platform];
+            scn.device = device.platform;
+            scn.push.setupPushNotifications();
+            appSetupComplete = true;
+        }
+        
+        function onOffline() {
+            console.log("APP OFFLINE");
+            isOnine = false;
+            
+            navigator.splashscreen.hide();
+            
+            if (jQuery("#no-connection").length == 0) {
+                var offlineElm = jQuery('<div id="no-connection"><img src="img/offline.png" width="200" height"163" /><h2> Cannot connect to the xbowling cloud. </h2><p>An Internet connection is required to play.</p><p>Please establish an Internet connection and try again.</p></div>');
+                jQuery(document.body).append(offlineElm);
+            }
+        }
+        
+
+        function onOnline() {
+            console.log("APP ONLINE");
+            isOnline = true;
+            $("#no-connection").detach();
+        }
+        
+		//if (scn.chromeEmulator) {
+			scn.bootstrapper.chromeEmulator = true;
+			window.device = { platform: "iPhone" };
+			jQuery(document).ready(onDeviceReady);
+		//}
+    </script>
+  
+</head>
+  <body>
+  </body>
+</html>

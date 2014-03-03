@@ -1,0 +1,498 @@
+<script type="text/javascript">
+(function (leaderboardPopup) {
+    ALL_COUNTRIES = "All Countries",
+    ALL_STATES = "All States",
+    ALL_VENUES = "All Centers",
+
+    leaderboardPopup.MODE = {
+        SELECT: 1,
+        VIEW: 2
+    },
+
+    leaderboardPopup.viewModel = function () {
+        this.mode = ko.observable(leaderboardPopup.MODE.SELECT);
+        this.countries = ko.observableArray();
+        this.selectedCountry = ko.observable(ALL_COUNTRIES);
+        this.selectedCountryId = ko.observable();
+        this.selectedState = ko.observable(ALL_STATES);
+        this.selectedStateId = ko.observable();
+        this.selectedVenue = ko.observable(ALL_VENUES);
+        this.selectedVenueId = ko.observable();
+        this.venues = ko.observableArray();
+        this.friendsOnly = ko.observable(false);
+        this.loading = ko.observable(false);
+        //this.leaderboardData = ko.observableArray();
+        this.leaderboardResults = ko.observableArray([]);
+        this.currentUserResult = ko.observable();
+        this.leaderboardName = ko.observable("");
+        this.allowSelectLeaderboard = ko.observable(true);
+        this.numberColumnHeader = ko.computed(function () {
+            switch (this.leaderboardName()) {
+                case "halloffame":
+                    return "Points";
+
+                case "strikeking":
+                    return "Number Strikes";
+
+                case "spareking":
+                    return "Number Spares";
+
+                case "points":
+                    return "Points";
+
+                case "challengesplayed":
+                    return "Challenges Played";
+
+                case "challengeswon":
+                    return "Challenges Won";
+
+                case "xb300club":
+                    return "300 Point Games";
+
+                case "alltimescore":
+                    return "All Time Score";
+
+                case "turkeybowl":
+                    return "Number Turkeys";
+
+                case "strikesforacause":
+                    return "Cumulative Score";
+
+                default:
+                    return "";
+            }
+        }, this);
+        this.popupTitle = ko.computed(function () {
+            if (this.mode() === leaderboardPopup.MODE.SELECT)
+                return "Leaderboards";
+            else {
+                switch (this.leaderboardName()) {
+                    case "strikeking":
+                        return "Strike King";
+
+                    case "spareking":
+                        return "Spare King";
+
+                    case "points":
+                        return "Points Won";
+
+                    case "challengesplayed":
+                        return "Challenges";
+
+                    case "challengeswon":
+                        return "Challenges Won";
+
+                    case "xb300club":
+                        return "XB 300 Club";
+
+                    case "alltimescore":
+                        return "All Time Score";
+
+                    case "turkeybowl":
+                        return "Turkey Challenge";
+
+                    case "strikesforacause":
+                        return "Strikes for a Cause";
+
+                    default:
+                        return "";
+                }
+            }
+        }, this);
+    },
+
+    leaderboardPopup.load = function() {
+        var popupViewModel = scn.popup.getViewModel(this);
+
+        var viewModel = new leaderboardPopup.viewModel();
+        ko.applyBindings(viewModel, this.get(0));
+
+        var leaderboardElm = jQuery("#leaderboard-popup-leaderboard:first", this)
+        leaderboardElm.slideUp();
+
+        if (popupViewModel) {
+            viewModel.allowSelectLeaderboard(popupViewModel.allowSelectLeaderboard);
+
+            if (popupViewModel.leaderboard) {
+                leaderboardPopup.getLeaderboard(popupViewModel.leaderboard);
+                viewModel.mode(leaderboardPopup.MODE.VIEW);
+
+                var popupElm = leaderboardElm.parents("#popup:first");
+                var tilesElm = jQuery("#leaderboard-popup-tiles:first", popupElm);
+                tilesElm.hide();
+                var leaderboardElm = tilesElm.siblings("#leaderboard-popup-leaderboard:first")
+                leaderboardElm.show();
+                jQuery("#leaderboard-popup-leaderboard-filter", leaderboardElm).show();
+            }
+        }
+
+        var that = this;
+
+        var leaderboardListScrollElm = jQuery("#leaderboard-popup-tiles", this);
+        var leaderboardListiScroll = new iScroll(leaderboardListScrollElm.get(0), {
+            snap: false,
+            momentum: true,
+            hScroll: false,
+            hScrollbar: false,
+            vScroll: true,
+            vScrollbar: true
+        });
+
+        var leaderboardScrollElm = jQuery("#leaderboard-scroll", this);
+        var leaderboardiScroll = new iScroll(leaderboardScrollElm.get(0), {
+            snap: false,
+            momentum: true,
+            hScroll: false,
+            hScrollbar: false,
+            vScroll: true,
+            vScrollbar: false
+        });
+
+        scn.popup.registerPopupDestructor(this, function () {
+            var toDestroyElm = leaderboardScrollElm.get(0);
+            if (toDestroyElm.iScroll) {
+                toDestroyElm.iScroll.destroy();
+                toDestroyElm.iScroll = null;
+            }
+        });
+
+        leaderboardScrollElm.height(125);
+
+        scn.viewEngine.wireTap(
+            jQuery("#leaderboard-popup-leaderboard-back", this),
+            scn.views.leaderboardPopup.backToLeaderboardSelect
+        );
+
+        var friendsOnlySubscription = viewModel.friendsOnly.subscribe(function () {
+            leaderboardPopup.getLeaderboard();
+        });
+
+        scn.popup.registerPopupDestructor(this, function () {
+            if (friendsOnlySubscription) {
+                friendsOnlySubscription.dispose();
+            }
+        });
+    },
+
+    leaderboardPopup.yourFriendsTap = function () {
+        var viewModel = ko.dataFor(this);
+        if (!viewModel.friendsOnly()) {
+            viewModel.friendsOnly(true);
+        }
+    },
+
+    leaderboardPopup.allXBowlersTap = function () {
+        var viewModel = ko.dataFor(this);
+        if (viewModel.friendsOnly()) {
+            viewModel.friendsOnly(false);
+        }
+    },
+
+    leaderboardPopup.selectLeaderboard = function () {
+        var elm = jQuery(this);
+        var leaderboard = elm.attr("data-leaderboard");
+        var viewModel = ko.dataFor(elm.get(0));
+        viewModel.leaderboardName(leaderboard);
+        viewModel.mode(leaderboardPopup.MODE.VIEW);
+
+        leaderboardPopup.getLeaderboard(leaderboard);
+
+        var tilesElm = elm.parents("#leaderboard-popup-tiles:first");
+        tilesElm.slideToggle();
+        var leaderboardElm = tilesElm.siblings("#leaderboard-popup-leaderboard:first")
+        leaderboardElm.slideToggle(-1, function () {
+            var popupWrapper = elm.parents("#popup:first");
+            if (leaderboard === "points") {
+                jQuery("#leaderboard-popup-leaderboard-filter", popupWrapper).hide();
+            } else {
+                jQuery("#leaderboard-popup-leaderboard-filter", popupWrapper).show();
+            }
+        });
+    },
+
+    leaderboardPopup.backToLeaderboardSelect = function () {
+        var elm = jQuery(this.element);
+        var viewModel = ko.dataFor(elm.get(0));
+        viewModel.mode(leaderboardPopup.MODE.SELECT);
+
+        var leaderboardElm = elm.parents("#leaderboard-popup-leaderboard:first");
+        jQuery("#leaderboard-popup-leaderboard-filter", leaderboardElm).hide();
+        leaderboardElm.slideToggle();
+        leaderboardElm.siblings("#leaderboard-popup-tiles:first")
+            .slideToggle();
+
+        viewModel.loading(false);
+        scn.hideLoading();
+    },
+
+    leaderboardPopup.getLeaderboard = function (leaderboardName) {
+        scn.showLoading();
+
+        var viewModel = ko.dataFor(jQuery("#leaderboard-popup-leaderboard:first").get(0));
+
+        if (leaderboardName) {
+            viewModel.leaderboardName(leaderboardName);
+        }
+
+        if (!viewModel.leaderboardName()) {
+            return;
+        }
+
+        viewModel.leaderboardResults.removeAll();
+        viewModel.currentUserResult(null);
+
+        viewModel.loading(true);
+
+        var leaderboardNameBeforeAjax = viewModel.leaderboardName();
+        var countryId = viewModel.selectedCountryId();
+        var administrativeAreaId = viewModel.selectedStateId();
+        var venueId = viewModel.selectedVenueId();
+        var friends = viewModel.friendsOnly();
+
+        var data = {
+            friends: viewModel.friendsOnly()
+        };
+
+        if (viewModel.leaderboardName() != "points") {
+            data.countryId = viewModel.selectedCountryId();
+            data.administrativeAreaId = viewModel.selectedStateId();
+            data.venueId = viewModel.selectedVenueId();
+        }
+
+        scn.ajax({
+            type: "GET",
+            url: scn.apiAddress + "leaderboard/" + leaderboardNameBeforeAjax,
+            data: data,
+            success: function (data) {
+                scn.hideLoading();
+
+                // user has hit back before loading was done and possibly changed the leaderboad
+                if (viewModel.mode() != leaderboardPopup.MODE.VIEW
+                    || leaderboardNameBeforeAjax != viewModel.leaderboardName()
+                    || countryId != viewModel.selectedCountryId()
+                    || administrativeAreaId != viewModel.selectedStateId()
+                    || venueId != viewModel.selectedVenueId()
+                    || friends != viewModel.friendsOnly()) {
+                    return;
+                }
+
+                viewModel.leaderboardResults(data.leaderboardResults);
+                viewModel.currentUserResult(data.currentUserResult);
+
+                var leaderboardScrollElm = jQuery("#leaderboard-scroll");
+                jQuery(leaderboardScrollElm.children()[0]).height((data.leaderboardResults.length * 42) + 75);
+                var leaderboardIs = leaderboardScrollElm.get(0).iScroll;
+                if (leaderboardIs) {
+                    leaderboardIs.refresh();
+                    leaderboardIs.scrollTo(0, 0);
+                }
+
+                viewModel.loading(false);
+            },
+            error: function (jqXhr, status) {
+                scn.hideLoading();
+                alert('An error occurred loading the Leaderboard.  Please try again later', { title: 'Uh oh!' });
+            }
+        });
+    },
+
+
+    leaderboardPopup.openCountryFilter = function () {
+        var elm = jQuery(this);
+        var viewModel = ko.dataFor(elm.get(0));
+        scn.popup.show("SelectCenterListPopup", {
+            viewModel: {
+                showCurtain: true,
+                mode: "country"
+            },
+            callback: function (popupViewModel) {
+                elm.text(popupViewModel.countryDisplayName);
+                if (popupViewModel.countryId < 1) {
+                    viewModel.selectedCountry(ALL_COUNTRIES);
+                    viewModel.selectedCountryId(0);
+                    viewModel.selectedState(ALL_STATES);
+                    viewModel.selectedStateId(0);
+                    viewModel.selectedVenue(ALL_VENUES);
+                    viewModel.selectedVenueId(0);
+                } else {
+                    if (popupViewModel.countryId != viewModel.selectedCountryId()) {
+                        viewModel.selectedCountry(popupViewModel.countryDisplayName);
+                        viewModel.selectedCountryId(popupViewModel.countryId);
+                        viewModel.selectedState(ALL_STATES);
+                        viewModel.selectedStateId(0);
+                        viewModel.selectedVenue(ALL_VENUES);
+                        viewModel.selectedVenueId(0);
+                    }
+                }
+
+                leaderboardPopup.getLeaderboard();
+            }
+        });
+    },
+
+    leaderboardPopup.openStateFilter = function () {
+        var elm = jQuery(this);
+        var viewModel = ko.dataFor(elm.get(0));
+        scn.popup.show("SelectCenterListPopup", {
+            viewModel: {
+                showCurtain: true,
+                mode: "state",
+                country: viewModel.selectedCountry()
+            },
+            callback: function (popupViewModel) {
+                elm.text(popupViewModel.stateDisplayName);
+                if (popupViewModel.stateId < 1) {
+                    viewModel.selectedState(ALL_STATES);
+                    viewModel.selectedStateId(0);
+                    viewModel.selectedVenue(ALL_VENUES);
+                    viewModel.selectedVenueId(0);
+                } else {
+                    if (popupViewModel.stateId != viewModel.selectedStateId()) {
+                        viewModel.selectedState(popupViewModel.stateDisplayName);
+                        viewModel.selectedStateId(popupViewModel.stateId);
+                        viewModel.selectedVenue(ALL_VENUES);
+                        viewModel.selectedVenueId(0);
+                    }
+                }
+
+                leaderboardPopup.getLeaderboard();
+            }
+        });
+    },
+
+    leaderboardPopup.openVenueFilter = function () {
+        var elm = jQuery(this);
+        var viewModel = ko.dataFor(elm.get(0));
+        scn.popup.show("SelectCenterListPopup", {
+            viewModel: {
+                showCurtain: true,
+                mode: "venue",
+                country: viewModel.selectedCountry(),
+                state: viewModel.selectedState()
+            },
+            callback: function (popupViewModel) {
+                elm.text(popupViewModel.venueName);
+                if (popupViewModel.venueId < 1) {
+                    viewModel.selectedVenue(ALL_VENUES);
+                    viewModel.selectedVenueId(0);
+                } else {
+                    if (popupViewModel.venueId != viewModel.selectedVenueId) {
+                        viewModel.selectedVenue(popupViewModel.venueName);
+                        viewModel.selectedVenueId(popupViewModel.venueId);
+                    }
+                }
+
+                leaderboardPopup.getLeaderboard();
+            }
+        });
+    }
+
+}(window.scn.views.leaderboardPopup = window.scn.views.leaderboardPopup || {}));
+
+</script>
+
+<div id="popup" data-load="window.scn.views.leaderboardPopup.load" style="height: 250px;">
+    <div class="popup-header">
+        <div class="centered-container">
+            <span id="history-popup-title" data-bind="text: popupTitle" style="font-size: 19px;"></span>
+        </div>
+    </div>
+    
+    <br class="clear" />
+
+    <div id="leaderboard-popup-tiles" class="full-list hundred-percent-width" style="height: 212px"><!-- data-bind="visible: mode() == scn.views.leaderboardPopup.MODE.SELECT"-->
+        <div style="padding-bottom: 30px">
+            <ul class="list-view">
+                <li><a data-leaderboard="strikesforacause" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">Strikes for a Cause</a></li>
+                <li><a data-leaderboard="turkeybowl" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">Turkey Challenge</a></li>
+                <li><a data-leaderboard="strikeking" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">Strike King</a></li>
+                <li><a data-leaderboard="spareking" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">Spare King</a></li>
+                <li><a data-leaderboard="points" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">Points Won</a></li>
+                <li><a data-leaderboard="challengesplayed" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">Challenges Played</a></li>
+                <li><a data-leaderboard="challengeswon" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">Challenges Won</a></li>
+                <li><a data-leaderboard="xb300club" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">XB 300 Club</a></li>
+                <li><a data-leaderboard="alltimescore" data-tap="scn.views.leaderboardPopup.selectLeaderboard" data-tap-alloweventbubble="true">All Time Score</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="leaderboard-popup-leaderboard" class="full-list hundred-percent-width" style="overflow: hidden; height: 220px" data-bind="visible: false"> <!-- data-xbind="visible: mode() == scn.views.leaderboardPopup.MODE.VIEW" -->
+        <ul style="padding: 0;">
+            <li class="button-container" style="float: left;width: auto;">
+                <div class="in-game-button orange-general-button light-text" style="padding: 5px 15px;"
+                     id="leaderboard-popup-leaderboard-back"
+                     data-bind="visible: allowSelectLeaderboard">Back
+                </div>
+                <div id="all-xbowlers-button"
+                     data-tap="scn.views.leaderboardPopup.allXBowlersTap"
+                     data-bind="css: { 'blue-general-button-depressed': !friendsOnly() }"
+                     class="in-game-button blue-general-button blue-general-button-depressed">
+                    <span>All Xbowlers</span>
+                </div>
+
+                <div id="your-friends-button"
+                     data-tap="scn.views.leaderboardPopup.yourFriendsTap"
+                     data-bind="css: { 'blue-general-button-depressed': friendsOnly() }"
+                     class="in-game-button blue-general-button">
+                    <span>Your Friends</span>
+                </div>
+            </li>
+            <li style="float: left;width: 40%;" data-bind="visible: leaderboardResults().length > 0">
+                <div data-bind="if: !currentUserResult()" style="font-size: 12px;color: #fff;font-weight: bold;text-align: center;padding: 5px;">You haven't ranked on the <span data-bind="    text: popupTitle"></span> leaderboard yet.<br /></div>
+                    <div data-bind="if: currentUserResult()" style="color: #fff;font-weight: bold;text-align: center;">Your rank: <span style="color: #f0e422" data-bind="    text: '#' + currentUserResult().rank"></span></div>
+
+            </li>
+        </ul>
+
+        <h1 id="loading" data-bind="visible: loading" style="margin: 0;">Loading ... </h1>
+
+        <!----- TABLE HEADER --------->
+
+        <div id="table">
+            <ul style="padding: 0;">
+                <li class="table-header">
+                    <ul>
+                        <li class="username">Username</li>
+                        <li class="th-leaderboard-variable" data-bind="text: numberColumnHeader"></li>
+                        <!--li class="th-leaderboard-state">State</li>
+                        <li class="th-leaderboard-country">Country</li-->
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        
+        <div id="leaderboard-scroll" class="hundred-percent-width">
+            <ul style="padding: 0; margin-top: 0;">
+
+                <!-- ko foreach: leaderboardResults -->
+                <li class="opponent">
+                    <ul>
+                        <li class="leaderboard-username">
+                            <div data-bind="text: rank" class="leaderboard-position">
+                            </div>
+                            <div class="opponent-name-container">
+                                <div data-bind="text: name" class="opponent-name"></div>
+                            </div>
+                        </li>
+                        <li data-bind="text: scn.addCommas(score)" class="leaderboard-variable"></li>
+                    </ul>
+                </li>
+                <!-- /ko -->
+            </ul>
+        </div>
+        <div data-bind="visible: !loading() && (!leaderboardResults() || leaderboardResults().length === 0)" class="centered light-text" style="margin-top: -25%; height: 115px">
+            <span data-bind="visible: !friendsOnly()" style="top:20px;">The <span data-bind="text: popupTitle"></span> leaderboard is wide open!</span>
+            <span data-bind="visible: friendsOnly()" style="top:20px;">None of your friends are here!  Please tell them to bowl more often!</span>
+        </div>
+        <div class="leaderboard-footer-container" id="leaderboard-popup-leaderboard-filter">
+            <div class="button-container">
+                <span class="float-left light-text" style="padding: 5px 5px 0 0">Filter:</span>
+                <button data-tap="scn.views.leaderboardPopup.openCountryFilter" data-bind="text: selectedCountry" class="in-game-button blue-general-button light-text" style="padding: 4px;"></button>
+                <button data-tap="scn.views.leaderboardPopup.openStateFilter" data-bind="visible: selectedCountryId() > 0, text: selectedState" class="in-game-button blue-general-button light-text" style="padding: 4px;"></button>
+                <button data-tap="scn.views.leaderboardPopup.openVenueFilter" data-bind="visible: selectedStateId() > 0, text: selectedVenue" class="in-game-button blue-general-button light-text" style="padding: 4px;"></button>
+            </div>
+        </div>
+        
+    </div>
+</div>
+    

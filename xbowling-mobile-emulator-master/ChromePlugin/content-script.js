@@ -1,0 +1,1 @@
+chrome.extension.sendMessage({ command: "selected-tab" });

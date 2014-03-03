@@ -1,0 +1,357 @@
+<script type="text/javascript">
+    (function (manualInputPopup) {
+        manualInputPopup.viewModel = function (frameNumber, game) {
+            this.frameNumber = ko.observable(frameNumber);
+            this.bowlingGameId = ko.observable(game.bowlingGameId());
+            this.game = game;
+
+            this.firstBallNumber = ko.computed(function () {
+                return ((this.frameNumber() * 2) - 1);
+            }, this);
+            this.firstBall = ko.observable(null);
+            this.firstBallPins = ko.computed(function () {
+                if (this.firstBall() === "F")
+                    return 0;
+                else if (this.firstBall() === "X")
+                    return 10;
+                else
+                    return parseInt(this.firstBall());
+            }, this);
+            this.noFirstBall = ko.computed(function () {
+                return this.firstBall() === null || this.firstBall() === "";
+            }, this);
+
+            this.secondBallNumber = ko.computed(function () {
+                return (this.frameNumber() * 2);
+            }, this);
+            this.secondBall = ko.observable(null);
+            this.secondBallPins = ko.computed(function () {
+                if (this.secondBall() === "F")
+                    return 0;
+                else if (this.secondBall() === "X")
+                    return 10;
+                else
+                    return parseInt(this.secondBall());
+            }, this);
+            this.noSecondBall = ko.computed(function () {
+                return this.secondBall() === null || this.secondBall() === "";
+            }, this);
+
+            this.thirdBallNumber = ko.computed(function () {
+                return ((this.frameNumber() * 2) + 1);
+            }, this);
+            this.thirdBall = ko.observable();
+        },
+
+        manualInputPopup.load = function () {
+            var popupViewModel = scn.popup.getViewModel(this);
+            var viewModel = new manualInputPopup.viewModel(popupViewModel.frameNumber, popupViewModel.game);
+
+            viewModel.firstBall(viewModel.game["squareScore" + viewModel.firstBallNumber()]());
+            viewModel.secondBall(viewModel.game["squareScore" + viewModel.secondBallNumber()]());
+
+            if (popupViewModel.frameNumber == 10) {
+                viewModel.thirdBall(viewModel.game["squareScore" + viewModel.thirdBallNumber()]());
+            }
+
+            var scroll = jQuery("#manual-input-popup-scroll", this).get(0);
+            if (scroll.iScroll) {
+                scroll.iScroll.destroy();
+                scroll.iScroll = null;
+            }
+
+            if (viewModel.frameNumber() == 10) {
+                var scr = jQuery(scroll);
+                scr.height(scn.popup.getHeight(this) - 20);
+
+                var innerScroll = jQuery(scr.children()[0]);
+                innerScroll.height(350);
+
+                var mainScroll = new iScroll(scroll, {
+                    snap: false,
+                    momentum: true,
+                    hScroll: false,
+                    hScrollbar: false,
+                    vScroll: true,
+                    vScrollbar: false
+                });
+                scn.popup.registerPopupDestructor(popup, function () {
+                    if (scroll && scroll.iScroll) {
+                        scroll.iScroll.destroy();
+                        scroll.iScroll = null;
+                    }
+                });
+            }
+
+            ko.applyBindings(viewModel, this.get(0));
+        },
+
+        manualInputPopup.doneTap = function () {
+            scn.popup.hide(this);
+        },
+
+        manualInputPopup.scoreTap = function () {
+            var button = jQuery(this);
+
+            if (button.hasClass("manual-input-not-available"))
+                return;
+
+            var container = button.parents(".manual-input-scores:first");
+            
+            var pins = button.children("span:first").text();
+            
+            var viewModel = ko.dataFor(button.get(0));
+
+            var ball = container.attr("data-ball");
+            if (ball === "1") {
+                viewModel.firstBall(pins);
+            } else if (ball === "2") {
+                viewModel.secondBall(pins);
+            } else if (ball === "3") {
+                viewModel.thirdBall(pins);
+            }
+            
+            scn.ajax({
+                url: scn.apiAddress + "bowlinggame/" + viewModel.bowlingGameId() + "/manualscores",
+                type: "POST",
+                data: {
+                    frameNumber: viewModel.frameNumber(),
+                    firstBall: viewModel.firstBall(),
+                    secondBall: viewModel.secondBall(),
+                    thirdBall: viewModel.thirdBall()
+                },
+                success: function (data) {
+                    viewModel.game["squareScore" + viewModel.firstBallNumber()](viewModel.firstBall());
+                    viewModel.game["squareScore" + viewModel.secondBallNumber()](viewModel.secondBall());
+
+                    if (viewModel.frameNumber === 10) {
+                        viewModel.game["squareScore" + viewModel.thirdBallNumber()](viewModel.thirdBall());
+                    }
+                },
+                error: function (jqXhr, txtStatus) {
+                }
+            });
+        },
+
+        manualInputPopup.previousTap = function () {
+            var elm = jQuery(this);
+            var popup = elm.parents("#popup:first");
+
+            var popupViewModel = scn.popup.getViewModel(popup);
+            if (popupViewModel.frameNumber < 2)
+                return;
+
+            ko.cleanNode(popup.get(0));
+            popupViewModel.frameNumber--;
+
+            // reload
+            manualInputPopup.load.call(popup);
+        },
+        
+        manualInputPopup.nextTap = function () {
+            var elm = jQuery(this);
+            var popup = elm.parents("#popup:first");
+
+            var popupViewModel = scn.popup.getViewModel(popup);
+            if (popupViewModel.frameNumber > 9)
+                return;
+
+            ko.cleanNode(popup.get(0));
+            popupViewModel.frameNumber++;
+
+            // reload
+            manualInputPopup.load.call(popup);
+        }
+    }(window.scn.views.manualInputPopup = window.scn.views.manualInputPopup || {}));
+</script>
+<style type="text/css">
+    .manual-input-scores-label {
+        text-align: left; 
+        font-size: 14px; 
+        float: left; 
+        width: 75px; 
+        margin-left: 10px; 
+        margin-top: 40px;
+    }
+
+    .manual-input-scores {
+        float: left;
+    }
+
+    .manual-input-scores-row {
+        clear: both; 
+        margin-top: 10px;
+    }
+
+    .manual-input-button-row {
+        width: 340px;
+        margin: auto;
+    }
+
+    .manual-input-button-row > div {
+        margin-top: 5px !important;
+    }
+
+    .manual-input-not-available {
+        background-color: #CCCCCC;
+    }
+
+    .manual-input-not-available > span {
+        color: #666666 !important;
+        text-shadow: none !important;
+    }
+</style>
+<div id="popup" data-load="scn.views.manualInputPopup.load">
+    <div class="popup-header"><div class="centered-container">
+        <span id="handicap-info-popup-title" data-bind="text: 'Frame ' + frameNumber()"></span></div>
+    </div>
+    <div id="manual-input-popup-scroll" style="margin-top: 20px;">
+        <div>
+            <h1 class="manual-input-scores-label">Ball 1</h1>
+            <div class="manual-input-scores" data-ball="1">
+                <div class="manual-input-scores-row">
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == 'F' }">
+                        <span>F</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '0' }">
+                        <span>0</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '1' }">
+                        <span>1</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '2' }">
+                        <span>2</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '3' }">
+                        <span>3</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '4' }">
+                        <span>4</span>
+                    </div>
+                    <br class="clear" />
+                </div>
+                <div class="manual-input-scores-row">
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '5' }">
+                        <span>5</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '6' }">
+                        <span>6</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '7' }">
+                        <span>7</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '8' }">
+                        <span>8</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == '9' }">
+                        <span>9</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': firstBall() == 'X' }">
+                        <span>X</span>
+                    </div>
+                    <br class="clear" />
+                </div>
+            </div>
+
+            <h1 class="manual-input-scores-label">Ball 2</h1>
+            <div class="manual-input-scores" data-ball="2">
+                <div class="manual-input-scores-row">
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == 'F', 'manual-input-not-available': noFirstBall() || (firstBallPins() == 10 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span>F</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '0', 'manual-input-not-available': noFirstBall() || (firstBallPins() == 10 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span>0</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '1', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 9 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10)))}">
+                        <span>1</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '2', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 8 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10)))}">
+                        <span>2</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '3', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 7 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span>3</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '4', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 6 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10)))}">
+                        <span>4</span>
+                    </div>
+                    <br class="clear" />
+                </div>
+                <div class="manual-input-scores-row">
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '5', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 5 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span>5</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '6', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 4 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span>6</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '7', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 3 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span>7</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '8', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 2 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span>8</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '9', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 1 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span>9</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': secondBall() == '/' || secondBall() == 'X', 'manual-input-not-available': noFirstBall() || (firstBallPins() >= 10 && (frameNumber() != 10 || (frameNumber() == 10 && firstBallPins() != 10))) }">
+                        <span data-bind="text: (frameNumber() == 10 && firstBall() == 'X') ? 'X' : '/'"></span>
+                    </div>
+                    <br class="clear" />
+                </div>
+            </div>
+
+            <h1 class="manual-input-scores-label" data-bind="visible: frameNumber() === 10">Ball 3</h1>
+            <div class="manual-input-scores" data-ball="3" data-bind="visible: frameNumber() === 10">
+                <div class="manual-input-scores-row">
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == 'F', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>F</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '0', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>0</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '1', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>1</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '2', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>2</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '3', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>3</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '4', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>4</span>
+                    </div>
+                    <br class="clear" />
+                </div>
+                <div class="manual-input-scores-row">
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '5', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>5</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '6', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>6</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '7', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>7</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '8', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>8</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == '9', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span>9</span>
+                    </div>
+                    <div class="small-button blue-general-button float-left" data-tap="scn.views.manualInputPopup.scoreTap" data-tap-alloweventbubble="true" data-bind="css: { 'blue-general-button-active': thirdBall() == 'X' || thirdBall() == '/', 'manual-input-not-available': noSecondBall() || (secondBallPins() < 10 && firstBallPins() < 10) }">
+                        <span data-bind="text: frameNumber() == 10 && secondBall() == 'X' ? 'X' : '/'"></span>
+                    </div>
+                    <br class="clear" />
+                </div>
+            </div>
+        
+            <div class="manual-input-button-row">
+                <div class="button-container float-right">
+                    <div class="medium-button green-general-button" data-tap="scn.views.manualInputPopup.doneTap">
+                        <span>Done</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

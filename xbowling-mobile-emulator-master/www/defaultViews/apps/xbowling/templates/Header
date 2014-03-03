@@ -1,0 +1,187 @@
+<script type="text/javascript">
+    (function (header) {
+        if (!scn.screenName) {
+            scn.screenName = ko.observable(null)
+                               .extend({ notify: 'always' });
+        };
+
+        header.homeButtonLoad = function () {
+            var elm = jQuery(this);
+            var templateWrapper = elm.parent().parent();
+            if (templateWrapper.attr("data-header-hidehome")) {
+                elm.addClass("hidden");
+            }
+        },
+
+        header.gamePointsLoad = function () {
+            var elm = jQuery(this);
+            var templateWrapper = elm.parent().parent();
+            if (templateWrapper.attr("data-header-showgamepoints")) {
+                elm.removeClass("hidden");
+            }
+        },
+
+        header.allTimePointsLoad = function () {
+            var elm = jQuery(this);
+            var templateWrapper = elm.parent().parent();
+            if (templateWrapper.attr("data-header-showalltimepoints")) {
+                elm.removeClass("hidden");
+            }
+        },
+
+        header.updateGamePoints = function (newPoints, callback, containerElm) {
+            var gamePointsDiv = jQuery("#game-points", containerElm);
+            scn.animateNumbers(gamePointsDiv, newPoints, callback);
+        },
+
+        header.updateAllTimePoints = function (newPoints, callback, containerElm, skipAnimation) {
+            var allTimePointsDiv = jQuery("#all-time-points", containerElm);
+
+            if (skipAnimation) {
+                allTimePointsDiv.text(scn.addCommas(newPoints));
+                if (callback) {
+                    callback.call(null);
+                }
+            } else {
+                scn.animateNumbers(allTimePointsDiv, newPoints, callback);
+            }
+        },
+
+        header.loadScreenName = function () {
+            var elm = jQuery(this);
+            var screenNameElm = jQuery("#player-username", elm);
+
+            var snSubscription = scn.screenName.subscribe(function (newScreenName) {
+                screenNameElm.text(newScreenName);
+            });
+
+            scn.viewEngine.registerViewDestructor(function () {
+                if (snSubscription) {
+                    snSubscription.dispose();
+                }
+            });
+
+            var subscription = scn.hasSession.subscribe(function (hasSession) {
+                if (hasSession) {
+                    screenNameElm.removeClass("fadeOut hidden")
+                                 .addClass("animated fadeIn");
+
+                    populateScreenName(screenNameElm);
+                } else {
+                    screenNameElm.removeClass("fadeIn")
+                                 .addClass("hidden");
+
+                    scn.screenName(null);
+                }
+            });
+
+            scn.viewEngine.registerViewDestructor(function () {
+                subscription.dispose();
+            });
+
+            populateScreenName(screenNameElm);
+        },
+
+      populateScreenName = function (screenNameElm) {
+          if (!scn.hasSession()) {
+              screenNameElm.addClass("hidden");
+              return;
+          }
+
+          scn.ajax({
+              url: scn.apiAddress + "userprofile",
+              type: "GET",
+              dataType: "json",
+              success: function (data) {
+                  scn.screenName(data.screenName);
+              },
+              error: function (jqXhr) {
+                  console.log("Screen name request failed with error " + jqXhr.status);
+              }
+          });
+      },
+
+        header.bannerLoad = function () {
+            var elm = jQuery(this);
+            var templateWrapper = elm.parent().parent();
+            if (templateWrapper.attr("data-header-showbanner") !== "true") {
+                return;
+            }
+
+            _checkBlackFridayBanner(elm);
+            _checkStrikesForACauseBanner(elm);
+
+            scn.registerResumeListener(function () {
+                _checkBlackFridayBanner(elm);
+            });
+        },
+
+        _checkStrikesForACauseBanner = function (elm) {
+            elm.children().detach();
+
+            var img = jQuery("<img />");
+            img.attr("src", "strikes-for-a-cause-ad.png");
+            viewEngine.replaceImages(img);
+            viewEngine.wireTap(img, header.showEnterStrikesForACause);
+            elm.append(img);
+
+            elm.removeClass("hidden");
+        },
+
+        _checkBlackFridayBanner = function (elm) {
+            elm.children().detach();
+
+            var now = Date.now();
+            if (now >= Date.UTC(2013, 10, 29, 11, 0, 0) && now < Date.UTC(2013, 10, 29, 17, 0, 0)) {
+                // black friday
+                var img = jQuery("<img />");
+                img.attr("src", "black-friday-ad.png");
+                viewEngine.replaceImages(img);
+                viewEngine.wireTap(img, header.showBuyCredits);
+                elm.append(img);
+            } else if (now > Date.UTC(2013, 11, 2, 5, 0, 0) && now < Date.UTC(2013, 11, 3, 0, 0, 0)) {
+                // cyber monday
+                var img = jQuery("<img />");
+                img.attr("src", "cyber-monday-ad.png");
+                viewEngine.replaceImages(img);
+                viewEngine.wireTap(img, header.showBuyCredits);
+                elm.append(img);
+            }
+
+            elm.removeClass("hidden");
+        },
+
+        header.showEnterStrikesForACause = function () {
+            scn.popup.show("StrikesForACausePopup");
+        },
+
+        header.showBuyCredits = function () {
+            scn.popup.show("BuyMoreCredits", { height: 275 });
+        }
+    }(window.scn.views.header = window.scn.views.header || {}));
+</script>
+<div id="dashboard-header">
+    <div class="username-banner">
+        <div class="xb-logo-container">
+            <div class="xb-logo">
+                <img src="avatar.jpg" /></div>
+        </div>
+        <div class="player-username" data-load="scn.views.header.loadScreenName">Welcome <span id="player-username"></span></div>
+    </div>
+
+    <div class="player-banner hidden" data-load="scn.views.header.allTimePointsLoad">
+        <div class="game-points">All Time Points <span id="all-time-points">0</span></div>
+    </div>
+
+    <div class="player-banner player-banner-resize hidden" data-load="scn.views.header.gamePointsLoad">
+        <div class="game-points">Game Points <span id="game-points">0</span></div>
+    </div>
+
+    <div class="float-right hidden" style="width: 225px; margin-right: 25px; margin-top: -5px;" data-load="scn.views.header.bannerLoad">
+    </div>
+    <div class="home-button-container" data-changeview="new-1-MainDashboard" data-changeview-slidedirection="right" data-load="scn.views.header.homeButtonLoad">
+        <div class="home-button">
+            <img src="home-icon.png" /></div>
+    </div>
+</div>
+<!---- END HEADER ---->

@@ -1,0 +1,218 @@
+<ul style="clear: both;">
+    <li style="float: left; width: auto;">
+        <div class="frame-username" data-bind="text: scn.urlDecode(name), visible: jQuery($element).parents('[data-scores-show-name]:first').length != 0"></div>
+    </li>
+    <li style="clear: both;" data-frame="1"><!--FRAME 1-->
+        <div class="frame-number-container">
+            <div class="frame-number">1</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore2,
+                            css: { circle: splitsOrderedBySquareNumber[1] }">
+            </div>
+
+            <div class="ball-2"
+                 data-bind="text: squareScore1,
+                            css: { circle: splitsOrderedBySquareNumber[0] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore1"></div>
+        </div>
+        
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins01 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins02 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+    <li data-frame="2"><!--FRAME 2-->
+        <div class="frame-number-container">
+            <div class="frame-number">2</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore4,
+                            css: { circle: splitsOrderedBySquareNumber[3] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore3,
+                            css: { circle: splitsOrderedBySquareNumber[2] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore2"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins03 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins04 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+    <li data-frame="3">
+        <div class="frame-number-container">
+            <div class="frame-number">3</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1">
+            <div class="ball-1"
+                 data-bind="text: squareScore6,
+                            css: { circle: splitsOrderedBySquareNumber[5] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore5,
+                            css: { circle: splitsOrderedBySquareNumber[4] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore3"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins05 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins06 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+
+    <li data-frame="4"><!--FRAME 4-->
+        <div class="frame-number-container">
+            <div class="frame-number">4</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore8,
+                            css: { circle: splitsOrderedBySquareNumber[7] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore7,
+                            css: { circle: splitsOrderedBySquareNumber[6] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore4"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins07 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins08 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+
+    <li data-frame="5"><!--FRAME 5-->
+        <div class="frame-number-container">
+            <div class="frame-number">5</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore10,
+                            css: { circle: splitsOrderedBySquareNumber[9] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore9,
+                            css: { circle: splitsOrderedBySquareNumber[8] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore5"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins09 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins10 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+
+    <li data-frame="6"><!--FRAME 6-->
+        <div class="frame-number-container">
+            <div class="frame-number">6</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore12,
+                            css: { circle: splitsOrderedBySquareNumber[11] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore11,
+                            css: { circle: splitsOrderedBySquareNumber[10] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore6"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins11 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins12 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+
+    <li data-frame="7"><!--FRAME 7-->
+        <div class="frame-number-container">
+            <div class="frame-number">7</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore14,
+                            css: { circle: splitsOrderedBySquareNumber[13] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore13,
+                            css: { circle: splitsOrderedBySquareNumber[12] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore7"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins13 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins14 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+
+    <li data-frame="8"><!--FRAME 8-->
+        <div class="frame-number-container">
+            <div class="frame-number">8</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore16,
+                            css: { circle: splitsOrderedBySquareNumber[15] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore15,
+                            css: { circle: splitsOrderedBySquareNumber[14] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore8"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins15 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins16 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+
+    <li data-frame="9"><!--FRAME 9-->
+        <div class="frame-number-container">
+            <div class="frame-number frame-number">9</div>
+        </div>
+
+        <div class="balls-container" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore18,
+                            css: { circle: splitsOrderedBySquareNumber[17] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore17,
+                            css: { circle: splitsOrderedBySquareNumber[16] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore9"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins17 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins18 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+    </li>
+
+    <li data-frame="10"><!--FRAME 10-->
+        <div style="width: 45px;" class="frame-number-container">
+            <div class="frame-number" >10</div>
+        </div>
+
+        <div class="balls-container" style="width: 45px;" data-bind="tap: scn.gameplay.frameTap" data-taporder="1" data-tap-alloweventbubble="true">
+            <div class="ball-1"
+                 data-bind="text: squareScore21,
+                            css: { circle: splitsOrderedBySquareNumber[20] }">
+            </div>
+            <div class="ball-2"
+                 data-bind="text: squareScore20,
+                            css: { circle: splitsOrderedBySquareNumber[19] }">
+            </div>
+            <div class="ball-3"
+                 data-bind="text: squareScore19,
+                            css: { circle: splitsOrderedBySquareNumber[18] }">
+            </div>
+            <div class="total-score" data-bind="text: frameScore10"></div>
+        </div>
+
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins19 }, tap: scn.gameplay.frameTap" data-pins-throw="1" data-taporder="2"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins20 }, tap: scn.gameplay.frameTap" data-pins-throw="2" data-taporder="3"></div>
+        <div class="hidden" data-bind="template: { name: 'Pins', data: standingPins21 }" data-pins-throw="3"></div>
+    </li>
+</ul>

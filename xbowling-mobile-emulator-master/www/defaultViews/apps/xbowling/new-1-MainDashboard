@@ -1,0 +1,409 @@
+
+<div id="animated-bg" class="paused"></div>
+
+<div data-template="Header" data-header-hidehome="true" data-header-showbanner="true"></div>
+
+<div id="dashboard-content-container">
+  
+    <div id="dashboard-content" data-load="scn.views.landing.load">
+  <div class="play-game-container">
+    <div class="play-button pulsating-glow-green" data-tap="scn.views.landing.playNowTap">
+        <span id="xbowl-now-button-text">Xbowl Now!</span>
+        <span id="back-to-game-button-text" class="hidden" style="font-size:110%;">Back to Game</span>
+    </div>
+    <div class="cancel-button red-challenge-button hidden" id="cancel-game-button" data-tap="scn.views.landing.cancelGameTap"><span>Cancel Game</span></div>
+    <div class="game-description hidden" id="play-description">Have Fun and Win Prizes!</div>
+
+
+  </div><!----- END PLAY CONTAINER --->
+
+  <div id="landing-tile-container" class="tile-container">
+    <div id="landing-tile-container-scroller">
+	    <ul>
+    	    <li>
+                <a data-tap="scn.views.landing.liveScoresTap" data-tap-alloweventbubble="true">
+                    <div class="tiles gold-tile">
+                        <div class="tile-icon-container"><div class="tile-icon"><img src="icon-rss.png" /></div></div>
+                        <div class="tile-title">Live scores</div>
+                    </div>
+                </a>
+            </li>
+
+            <li>
+                <a data-popup="StatsPopup" data-tap-alloweventbubble="true">
+                    <div class="tiles brown-tile">
+                        <div class="tile-icon-container"><div class="tile-icon"><img src="icon-stats.png" /></div></div>
+                        <div class="tile-title">My Stats</div>
+                    </div>
+                </a>
+            </li>
+
+            <li>
+                <a data-tap="scn.views.landing.friendsTap" data-tap-alloweventbubble="true">
+                    <div class="tiles green-tile">
+                        <div class="tile-icon-container"><div class="tile-icon"><img src="icon-friends.png" /></div></div>
+                        <div class="tile-title">My Friends</div>
+                    </div>
+                </a>
+            </li>
+
+            <li>
+                <a data-tap="scn.views.landing.vibTap" data-tap-alloweventbubble="true">
+                    <div class="tiles black-tile">
+                        <div class="tile-icon-container"><div class="tile-icon vib"><img src="icon-vib.png" /></div></div>
+                        <div class="tile-title">Celebrity</div>
+                    </div>
+                </a>
+            </li>
+
+            <li>
+                <a data-tap="scn.views.landing.leaderboardsTap" data-tap-alloweventbubble="true">
+                    <div class="tiles blue-tile">
+                        <div class="tile-icon-container"><div class="tile-icon vib"><img src="icon-leaderboard.png" /></div></div>
+                        <div class="tile-title">Leaderboards</div>
+                    </div>
+                </a>
+            </li>
+
+            <li>
+                <a data-popup="PostedGameStatusPopup" data-tap-alloweventbubble="true">
+                    <div class="tiles red-tile">
+                        <div class="tile-icon-container"><div class="tile-icon vib">
+                            <img src="icon-game-history.png" /></div></div>
+                        <div class="tile-title">My Opponents</div>
+                    </div>
+                </a>
+            </li>
+
+        </ul>
+        <ul>
+    	     <li>
+                <a data-tap="scn.views.landing.newsTap" data-tap-alloweventbubble="true">
+                    <div class="tiles gold-tile">
+                        <div class="tile-icon-container"><div class="tile-icon"><img src="icon-xbn.png" /></div></div>
+                        <div class="tile-title">News</div>
+                    </div>
+                </a>
+            </li>            
+
+            <li>
+                <a data-tap="scn.views.landing.tournamentsTap" data-tap-alloweventbubble="true">
+                    <div class="tiles green-tile">
+                        <div class="tile-icon-container"><div class="tile-icon"><img src="icon-tournament.png" /></div></div>
+                        <div class="tile-title">Tournaments</div>
+                    </div>
+                </a>
+            </li>
+
+            <li>
+                <a data-tap="scn.views.landing.historyTap" data-tap-alloweventbubble="true">
+                    <div class="tiles red-tile">
+                        <div class="tile-icon-container"><div class="tile-icon vib">
+                            <img src="icon-game-history.png" /></div></div>
+                        <div class="tile-title">My History</div>
+                    </div>
+                </a>
+            </li>
+
+            <li>
+                <a data-tap="scn.views.landing.musicTap" data-tap-alloweventbubble="true">
+                    <div class="tiles black-tile">
+                        <div class="ribbon-coming-soon"><img src="ribbon-coming-soon.png" /></div>
+                        <div class="tile-icon-container"><div class="tile-icon"><img src="icon-xbmusic.png" /></div></div>
+                        <div class="tile-title">XB Music</div>
+                    </div>
+                </a>
+            </li>
+
+            <li>
+                <a data-tap="scn.views.landing.tellAFriendTap" data-tap-alloweventbubble="true">
+                    <div class="tiles blue-tile">
+                        <div class="tile-icon-container"><div class="tile-icon"><img src="icon-tell-a-friend.png" /></div></div>
+                        <div class="tile-title">Tell a Friend</div>
+                    </div>
+                </a>
+            </li>
+            
+        </ul>
+        <br class="clear" />
+    </div>
+</div><!----- END TILE CONTAINER ---> 
+  <div id="landing-page-indicator-container"> 
+    <div class="page-indicator"><span class="selected"></span></div>
+    <div class="page-indicator"><span></span></div>
+  </div>
+</div>
+</div><!----- END DASHBOARD CONTENT --->
+
+<div data-template="Footer"></div>
+
+<script type="text/javascript">
+    (function (landing) {
+        landing.playNowTap = function () {
+            if (jQuery("#xbowl-now-button-text").is(":visible")) {
+                showPopupWithLogin("SelectCenterPopup");
+                return;
+            }
+
+            scn.showLoading();
+
+            var lastGameInfo = scn.retrieveLastGameInfo();
+            if (lastGameInfo && lastGameInfo.bowlingGameId > 0 && lastGameInfo.laneCheckoutId > 0 && lastGameInfo.timestamp) {
+                // expires after 90 minutes
+                var momentDate = moment(lastGameInfo.timestamp);
+                momentDate.add("minutes", 90);
+                if (new Date() < momentDate.toDate()) {
+                    var destination = lastGameInfo.scoringType === "Manual" ? "ManualInGameScreen" : "new-2-InGameScreen";
+                    scn.viewEngine.changeView(destination + "?bowlingGame=" + lastGameInfo.bowlingGameId + "&laneCheckout=" + lastGameInfo.laneCheckoutId + "&skipChallengePopup=true");
+                } else {
+                    //var parent = elm.parents("#dashboard-content-container:first");
+                    jQuery("#xbowl-now-button-text").removeClass("hidden");
+                    jQuery("#back-to-game-button-text").removeClass("hidden");
+                    jQuery("#play-description").removeClass("hidden");
+                    jQuery("#cancel-game-button").addClass("hidden");
+                    scn.hideLoading();
+                }
+            } else {
+                scn.hideLoading();
+            }
+        },
+
+        landing.cancelGameTap = function () {
+            var elm = jQuery(this);
+            var desc = elm.siblings("#play-description");
+
+            confirm("Are you sure you want to cancel your game?", {
+                title: "Cancel Game",
+                callback: function (r) {
+                    if (r === NOTIFICATION_BUTTONS.OK) {
+                        var lastGameInfo = scn.retrieveLastGameInfo();
+                        if (lastGameInfo && lastGameInfo.laneCheckoutId > 0) {
+                            scn.showLoading();
+
+                            var endpoint = lastGameInfo.scoringType == "Manual" ? "manuallanecheckout" : "lanecheckout";
+
+                            scn.ajax({
+                                url: scn.apiAddress + endpoint,
+                                type: "DELETE",
+                                data: { id: lastGameInfo.laneCheckoutId },
+                                success: function (data) {
+                                    scn.hideLoading();
+
+                                    var parent = elm.parents("#dashboard-content-container:first");
+                                    jQuery("#xbowl-now-button-text", parent).removeClass("hidden");
+                                    jQuery("#back-to-game-button-text", parent).addClass("hidden");
+
+                                    elm.addClass("hidden");
+                                    desc.removeClass("hidden");
+
+                                    scn.clearLastGameInfo();
+                                },
+                                error: function (jqXhr) {
+                                    scn.hideLoading();
+
+                                    var parent = elm.parents("#dashboard-content-container:first");
+                                    jQuery("#xbowl-now-button-text", parent).removeClass("hidden");
+                                    jQuery("#back-to-game-button-text", parent).addClass("hidden");
+
+                                    elm.addClass("hidden");
+                                    desc.removeClass("hidden");
+
+                                    scn.clearLastGameInfo();
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+        },
+
+        landing.historyTap = function () {
+            showPopupWithLogin("HistoryPopup");
+        },
+
+        landing.tellAFriendTap = function () {
+            if (scn.hasSession()) {
+                //scn.viewEngine.changeView("EmailComposer");
+                scn.popup.show("TellAFriendPopup");
+            } else {
+                scn.popup.show("Login", {
+                    callback: function (viewModel) {
+                        if (viewModel && viewModel.loginSuccess) {
+                            //scn.viewEngine.changeView("EmailComposer");
+                            scn.popup.show("TellAFriendPopup");
+                        }
+                    }
+                });
+            }
+        },
+
+        showPopupWithLogin = function (viewName) {
+            if (scn.hasSession()) {
+                scn.popup.show(viewName);
+                //scn.viewEngine.changeView("BrowseCenterCountries?mode=play");
+            } else {
+                scn.popup.show("Login", {
+                    callback: function (viewModel) {
+                        if (viewModel && viewModel.loginSuccess) {
+                            scn.popup.show(viewName);
+                        }
+                    }
+                });
+                //var returnTo = encodeURIComponent("BrowseCenterCountries?mode=play");
+                //scn.viewEngine.changeView("Login?return=" + returnTo);
+            }
+        },
+
+        landing.liveScoresTap = function () {
+            scn.popup.show("SelectCenterPopup", {
+                viewModel: {
+                    mode: "livescores"
+                },
+                callback: function (data) {
+                    if (data) {
+                        scn.viewEngine.changeView("LiveScores?venue="
+                            + data.selectedVenue()
+                            + "&venueName=" + encodeURIComponent(data.selectedVenueName()));
+                    }
+                }
+            });
+            //var returnTo = encodeURIComponent("BrowseCenterCountries?mode=play");
+            //scn.viewEngine.changeView("Login?return=" + returnTo);
+        },
+
+        landing.tournamentsTap = function () {
+            var teWindow = window.open("http://te-scn-web-mobileclient.cloudapp.net/", "_blank", "location=no");
+            scn.injectWindowLoadingMessage(teWindow, "We are loading XBowling Tournament Edition...", "Sit Tight!");
+            //alert("There are no tournaments right now!  Please check back regularly to view scores, stats, and prizes from xbowling enabled tournaments!");
+        },
+
+        landing.vibTap = function () {
+            showPopupWithLogin('VibEntryPopup');
+        },
+
+        landing.musicTap = function () {
+            alert("You will soon be able to request music videos from Bowling Music Network as you bowl!", { title: "Coming Soon!" });
+        },
+
+        landing.newsTap = function () {
+            scn.popup.show("NewsPopup");
+        },
+
+        landing.friendsTap = function () {
+            showPopupWithLogin("MyFriendsPopup");
+        },
+
+        landing.leaderboardsTap = function () {
+            showPopupWithLogin('LeaderboardPopup');
+        },
+
+        landing.creditHistoryTap = function () {
+            showPopupWithLogin('CreditHistoryPopup');
+        },
+
+        landing.postedGameStatusPopup = function () {
+            showPopupWithLogin('PostedGameStatusPopup');
+        },
+
+        landing.load = function () {
+            var elm = jQuery(this);
+
+            var sawWelcomeKey = "scn-xbowling-sawwelcome-" + scn.getSession();
+            var sawWelcome = localStorage.getItem(sawWelcomeKey);
+            if (sawWelcome != "true") {
+                scn.ajax({
+                    url: scn.apiAddress + "legacyuser",
+                    type: "GET",
+                    success: function (data) {
+                        if (data) {
+                            if (!data.wasNotifiedCreditMigrationBonus) {
+                                scn.popup.show("MigrationNotificationPopup", {
+                                    viewModel: {
+                                        creditBonus: data.creditMigrationBonus,
+                                        creditBonusType: data.creditMigrationBonus === 200 ? "top25" : ""
+                                    }
+                                });
+                            }
+
+                            localStorage.setItem(sawWelcomeKey, "true");
+                        }
+                    },
+                    error: function () {
+                    }
+                });
+            }
+
+            // setup tile scroller
+            var jqTileContainer = jQuery("#landing-tile-container", elm);
+
+            var tileContainer = jqTileContainer.get(0);
+            var scroll = new iScroll(tileContainer, {
+                snap: true,
+                momentum: false,
+                hScroll: true,
+                hScrollbar: false,
+                vScroll: false,
+                vScrollbar: false,
+                onScrollEnd: function () {
+                    var pageIndicatorContainer = jQuery(this.wrapper).siblings("#landing-page-indicator-container:first");
+                    jQuery(".page-indicator > span", pageIndicatorContainer).removeClass("selected");
+                    var page = this.currPageX + 1;
+                    jQuery(".page-indicator:nth-child(" + page + ") > span", pageIndicatorContainer).addClass("selected");
+                }
+            });
+            scn.viewEngine.registerViewDestructor(function () {
+                if (tileContainer && tileContainer.iScroll) {
+                    tileContainer.iScroll.destroy();
+                    tileContainer.iScroll = null;
+                }
+            });
+
+            setTimeout(function () {
+                elm.parent().siblings("#animated-bg.paused").removeClass("paused");
+            }, 1000);
+
+            if (scn.hasSession()) {
+                var lastGameInfo = scn.retrieveLastGameInfo();
+                if (lastGameInfo && lastGameInfo.bowlingGameId > 0 && lastGameInfo.laneCheckoutId > 0 && lastGameInfo.timestamp) {
+                    // expires after 90 minutes
+                    var momentDate = moment(lastGameInfo.timestamp);
+                    momentDate.add("minutes", 90);
+                    if (new Date() < momentDate.toDate()) {
+                        jQuery("#cancel-game-button", elm).removeClass("hidden");
+                        jQuery("#back-to-game-button-text", elm).removeClass("hidden");
+                        jQuery("#xbowl-now-button-text", elm).addClass("hidden");
+                    } else {
+                        jQuery("#play-description", elm).removeClass("hidden");
+                        jQuery("#back-to-game-button-text", elm).addClass("hidden");
+                        jQuery("#xbowl-now-button-text", elm).removeClass("hidden");
+                    }
+                } else {
+                    jQuery("#play-description", elm).removeClass("hidden");
+                    jQuery("#back-to-game-button-text", elm).addClass("hidden");
+                    jQuery("#xbowl-now-button-text", elm).removeClass("hidden");
+                }
+
+                var sessionSubs = scn.hasSession.subscribe(function (newValue) {
+                    if (!newValue) {
+                        jQuery("#cancel-game-button", elm).addClass("hidden");
+                        jQuery("#back-to-game-button-text", elm).addClass("hidden");
+                        jQuery("#xbowl-now-button-text", elm).removeClass("hidden");
+                        jQuery("#play-description", elm).removeClass("hidden");
+                    }
+                });
+
+                scn.viewEngine.registerViewDestructor(function () {
+                    if (sessionSubs) {
+                        sessionSubs.dispose();
+                    }
+                });
+            } else {
+                jQuery("#play-description", elm).removeClass("hidden");
+                jQuery("#back-to-game-button-text", elm).addClass("hidden");
+                jQuery("#xbowl-now-button-text", elm).removeClass("hidden");
+            }
+        }
+
+
+    }(window.scn.views.landing = window.scn.views.landing || {}));
+</script>

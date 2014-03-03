@@ -1,0 +1,277 @@
+<script type="text/javascript">
+
+(function (createGamePopup) {
+    createGamePopup.viewModel = function () {
+        this.name = ko.observable();
+        this.bowlingGameId = ko.observable();
+        this.competitionType = ko.observable();
+        this.opponentLimit = ko.observable();
+        this.entryFeeCredits = ko.observable();
+        this.scoringMode = ko.observable();
+        this.isManualScoring = ko.observable();
+        this.entryRestrictions = ko.observable();
+
+        this.availableEntryFeeCredits = ko.observableArray([
+            { value: 0, text: 'Credit Amount' },
+            { value: 10, text: '10 credits' },
+            { value: 25, text: '25 credits' },
+            { value: 50, text: '50 credits' },
+            { value: 100, text: '100 credits' },
+            { value: 500, text: '500 credits' },
+            { value: 1000, text: '1000 credits' }
+        ]);
+
+        this.cost = ko.computed(function () {
+            var c = this.opponentLimit() * this.entryFeeCredits();
+            if (isNaN(c)) {
+                c = 0;
+            }
+            return c;
+        }, this);
+
+        this.reward = ko.computed(function () {
+            var limit = this.opponentLimit();
+            if (!limit)
+                return 0;
+            
+            var r = scn.calculateLivePayout(this.entryFeeCredits());
+            return r * limit;
+        }, this);
+
+        this.nameError = ko.observable(false);
+        this.entryFeeCreditsError = ko.observable(false);
+        this.opponentLimitError = ko.observable(false);
+        this.scoringModeError = ko.observable(false);
+        this.entryRestrictionsError = ko.observable(false);
+    },
+
+    createGamePopup.submitFromButton = function () {
+        jQuery(this).parents('#popup').find('form').submit();
+    },
+
+    createGamePopup.load = function () {
+        jQuery('form', this).bind(
+            'submit',
+            createGamePopup.postCreateGame);
+
+        var popupViewModel = scn.popup.getViewModel(this);
+
+        var viewModel = new createGamePopup.viewModel();
+        viewModel.bowlingGameId(popupViewModel.bowlingGameId);
+        viewModel.competitionType(popupViewModel.competitionType);
+        viewModel.isManualScoring(popupViewModel.isManualScoring ? true : false);
+
+        ko.applyBindings(
+            viewModel,
+            this.get(0));
+    },
+
+    createGamePopup.postCreateGame = function () {
+            var that = this;
+            var viewModel = ko.dataFor(this);
+
+            var error = [];
+            if (!viewModel.name() || viewModel.name().trim() == "") {
+                error.push("You need to enter a name for the game!");
+                viewModel.nameError(true);
+            } else {
+                viewModel.nameError(false);
+            }
+
+            if (viewModel.competitionType() == "Live") {
+                if (viewModel.entryFeeCredits() == null || viewModel.entryFeeCredits() < 1) {
+                    error.push("You need to select a Credit Amount!");
+                    viewModel.entryFeeCreditsError(true);
+                } else {
+                    viewModel.entryFeeCreditsError(false);
+
+                    // check legal to make sure there are no state regulations
+                    if (!scn.legal.checkH2HLiveEntry(viewModel.entryFeeCredits())) {
+                        return false;
+                    }
+                }
+
+                if (viewModel.opponentLimit() < 1) {
+                    error.push("You need to select a Number of Opponents!");
+                    viewModel.opponentLimitError(true);
+                } else {
+                    viewModel.opponentLimitError(false);
+                }
+
+                if (viewModel.scoringMode() != "Handicap" && viewModel.scoringMode() != "Scratch") {
+                    error.push("You need to select a Scoring Mode!");
+                    viewModel.scoringModeError(true);
+                } else {
+                    viewModel.scoringModeError(false);
+                }
+
+                if (["MachineScoring", "ManualScoring", "All"].indexOf(viewModel.entryRestrictions()) < 0) {
+                    error.push("You need to select a Play Mode!");
+                    viewModel.entryRestrictionsError(true);
+                } else {
+                    viewModel.entryRestrictionsError(false);
+                }
+            }
+
+            if (error.length > 0) {
+                var strMessage = "";
+                for (var i = 0; i < error.length; i++) {
+                    if (i > 0) {
+                        strMessage += "\n";
+                    }
+
+                    strMessage += error[i];
+                }
+
+                alert(strMessage);
+                return false;
+            }
+
+            scn.showLoading();
+            
+            // create data based on competition type
+            var data = {
+                competition: {
+                    maxGroups: 1,
+                    competitionType: viewModel.competitionType(),
+                    name: viewModel.name()
+                },
+                bowlingGame: {
+                    id: viewModel.bowlingGameId()
+                }
+            };
+
+            var urlModifier;
+            if (viewModel.competitionType() == "Posted") {
+                data.entryFeeCredits = parseInt(viewModel.entryFeeCredits());
+                data.competition.maxChallengersPerGroup = 1;
+                urlModifier = "/posted";
+            } else if (viewModel.competitionType() == "Live") {
+                data.competition.entryFeeCredits = parseInt(viewModel.entryFeeCredits());
+                data.competition.maxChallengersPerGroup = parseInt(viewModel.opponentLimit());
+                data.competition.scoringMode = viewModel.scoringMode();
+                data.competition.entryRestrictions = viewModel.entryRestrictions();
+                urlModifier = "/live";
+            } else {
+                throw "Competition Type not supported.";
+            }
+
+            scn.ajax({
+                url: scn.apiAddress + "bowlingcompetition" + urlModifier,
+                type: "POST",
+                data: data,
+                dataType: "json",
+                success: function (data) {
+                    scn.hideLoading();
+                    scn.views.footer.populateWallet();
+                    scn.popup.hide(that, data);
+                },
+                error: function (jqXhr) {
+                    scn.hideLoading();
+                    if (jqXhr.status === 402) {
+                        // not enough credits...
+                        confirm("You do not have enough credits to create that game!  Would you like to purchase more credits now?", {
+                            title: "Uh oh!",
+                            callback: function (r) {
+                                if (r === NOTIFICATION_BUTTONS.OK) {
+                                    scn.popup.show("BuyMoreCredits", {
+                                        callback: function (callbackViewModel) {
+                                            if (callbackViewModel && callbackViewModel.purchaseMade) {
+                                                // try again
+                                                createGamePopup.postCreateGame.apply(that);
+                                            }
+                                        },
+                                        height: 275
+                                    });
+                                }
+                            }
+                        });
+                    } else {
+                        alert("An error occurred entering creating that game!  No credits were subtracted from your account.  Please try again later.");
+                    }
+                }
+            });
+
+            return false;
+    }
+
+}(window.scn.views.createGamePopup = window.scn.views.createGamePopup || {}));
+</script>
+
+<div id="popup" class="green-bg" data-load="window.scn.views.createGamePopup.load">
+    <div class="create-game-container">
+          <div class="message-container">
+              <p>
+                You are the Organizer.<br />
+                <span data-bind="visible: competitionType() == 'Live'">You may accept or reject opponents joining this game.</span>
+              </p>
+          </div>
+
+        <div class="form-content-container">
+           <form>
+
+               <input  type="text" placeholder="Game Name" data-bind="value: name, valueUpdate: 'afterkeydown', css: { error: nameError }" />
+
+               <div data-bind="visible: competitionType() == 'Live'">
+                   <select id="entry-fee-select" data-bind="options: availableEntryFeeCredits, optionsText: 'text', optionsValue: 'value', value: entryFeeCredits, valueUpdate: 'afterkeydown', css: { error: entryFeeCreditsError }">
+                    </select>   
+
+                   <select id="opponent-limit-select" data-bind="value: opponentLimit, css: { error: opponentLimitError }">
+                        <option value="0">Number of Opponents</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                        <option>6</option>
+                        <option>7</option>
+                        <option>8</option>
+                    </select>  
+
+                   <select id="scoring-mode-select" data-bind="value: scoringMode, css: { error: scoringModeError }">
+                        <option>Scoring Mode</option>
+                        <option value="Handicap">Regular Game - Scores with Handicap</option>
+                        <option value="Scratch">I am that good - Scratch</option>
+                    </select>  
+
+                   <select id="entry-restrictions-select" data-bind="visible: competitionType() == 'Live', value: entryRestrictions, css: { error: entryRestrictionsError }">
+                        <option>Play Mode</option>
+                        <!-- ko if: !isManualScoring() -->
+                        <option value="MachineScoring">Automated Only</option>
+                        <!-- /ko -->
+                        <option value="ManualScoring">Self Input Only</option>
+                        <option value="All">Automated or Self Input</option>
+                    </select>  
+               </div>
+           </form>
+
+           <div class="cost-container" data-bind="visible: competitionType() != 'Live'">
+            <!--    <div class="cost">Cost: </div>
+                <div class="cost-amt">
+                    <div data-bind="text: cost" class="buy-in-amt">0</div>
+                        <div class="xcoin-container">
+                            <div class="xcoin">
+                                <img src="xcoin.png" />
+                            </div>
+                        </div>
+                </div>-->
+
+            </div>
+            <div class="cost-container" data-bind="visible: competitionType() == 'Live'">
+                <div class="cost">REWARD:</div>
+                <div class="cost-amt">
+                    <div data-bind="text: scn.addCommas(reward())" class="point-amt">0</div> 
+                    <div class="xcoin-container light-text">
+                        PTS
+                    </div>
+                </div>
+            </div>
+
+           <div data-tap="scn.views.createGamePopup.submitFromButton" class="button-container">
+               <div class="medium-button green-general-button " >
+                   <span>Create<br />
+                       Game</span>
+               </div>
+           </div>
+        </div>
+</div>

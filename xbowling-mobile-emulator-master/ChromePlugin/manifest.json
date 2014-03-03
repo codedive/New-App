@@ -1,0 +1,32 @@
+{
+  "manifest_version": 2,
+
+  "name": "SCN Bootstrapper Helper",
+  "description": "This extension bootstraps the SCN app for the Chrome emulator.",
+  "version": "1.0",
+
+  "permissions": [
+    "https://*.xbowling.com/*",
+	"http://*.xbowling.com/*",
+	"tabs",
+	"activeTab",
+	"storage",
+	"background"
+  ],
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [{
+		"js": ["content-script.js"],
+		"matches": ["http://*.xbowling.com/*", "https://*.xbowling.com/*"],
+		"run_at": "document_start"
+	}],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "web_accessible_resources": [
+	"plugin.js", "zip/zip.js", "zip/inflate.js", "zip/deflate.js"
+  ]
+}

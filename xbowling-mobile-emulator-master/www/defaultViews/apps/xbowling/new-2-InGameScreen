@@ -1,0 +1,1702 @@
+
+<div id="animated-bg"></div>
+<div id="in-game-screen-header" data-template="Header" data-header-showgamepoints="true" data-header-showalltimepoints="true"></div>
+
+<div id="in-game-screen-wrapper" data-load="scn.views.inGameScreen.load">
+  <div id="in-game-screen-container">
+    <div id="tabs">
+        <ul class="tabs" id="tabsnav">
+          <li>
+              <a class="menu-internal user-tab" data-tab="tab-1">
+                  <div class="user-tab-container">
+                      <div class="user-info">
+                      <span class="tab-title-a">My Game</span>
+                     <span class="tab-title-b" style="width:100px" data-bind="text: bowlingGameView.bowlingGame.name">Current Game</span>
+                      </div>
+                      <div class="game-info">
+                       <span class="tab-title-c">Raw / Handicap Score</span>
+                       <span class="tab-title-d" style="margin-top: 10px" data-bind="if: bowlingGameView, text: bowlingGameView.bowlingGame.finalScore() + ' / ' + bowlingGameView.bowlingGame.handicapScore()"></span>
+                      </div>
+                  </div>
+              </a>
+            </li>
+
+            <li>
+                <a class="menu-internal challenger-tab" data-tab="challenger-tab">
+                    <div class="user-tab-container" data-bind="with: bowlingGameView.bowlingGame">
+                        <div class="user-info h2h-tab">
+                        <span class="tab-title-a" >Head 2 Head</span>
+                        <span class="tab-title-b tab-title-b-opponent-text-color">Posted</span>
+                        </div>
+                    </div>
+                </a>
+            </li>
+
+
+            <!------- END HIDDEN TAB: OPPONENT DETAIL ----->
+
+            <li>
+                <a class="menu-internal live-lobby" data-tab="tab-4" data-tab-onshow="scn.views.inGameScreen.liveTabShow">
+                <div class="user-tab-container" data-bind="with: bowlingGameView.bowlingGame">
+                    <div class="user-info h2h-tab">
+                    <span class="tab-title-a live-tab-title-a" style="width:63px;text-align: left;">Head 2 Head</span>
+                    <span class="tab-title-b tab-title-b-opponent-text-color live-tab-title-b" >Live</span>
+                    </div>
+                    <div class="green-dot-container">
+                        <div class="green-dot"></div>
+                    </div>
+                </div>
+            </a>
+            </li>
+
+
+            <li>
+                <a class="menu-internal vib-lobby" data-tab="vib-tab" data-tab-onshow="scn.views.inGameScreen.onVibTabShow">
+                <div class="user-tab-container" data-bind="with: bowlingGameView.bowlingGame">
+                    <div class="user-info">
+                    <span class="tab-title-a vib-tab-title-a" style="color:#d3db00">VIB</span>
+                    <span class="tab-title-b tab-title-b-opponent-text-color vib-tab-title-b" >Posted</span>
+                    </div>
+                    <div class="green-dot-container hidden">
+                        <div class="green-dot"></div>
+                    </div>
+                </div>
+            </a>
+            </li>
+        </ul>
+
+        <!----------***** USER TAB *****---------->
+        <div id="tab-1"
+             data-bind="visible: tab() == 'tab-1'">
+          <div class="tab-content-container">
+              <div class="frame-section" data-bind="with: bowlingGameView.bowlingGame">
+                  <div data-template="Scores"></div>
+              </div>
+              <div class="challenge-section">
+                    <div class="challenge-container">
+                        <div class="challenge-swipe" >
+                            
+                            <div class="challenge-list green-challenge-button pulsating-glow-inner-green" data-bind="tap: scn.views.inGameScreen.showAvailableChallengePopup">
+                                    <div class="challenge-big-button-wrapper">
+                                            <div class="challenge-title-container">
+                                                <div class="challenge-pre-title"><div class="pre-title">Win points Get Prizes</div></div>
+                                                <div class="challenge-title"><div class="title">Select a Challenge</div></div>
+                                            </div>
+                                    </div>
+                            </div>
+
+                            <div class="challenge-list yellow-challenge-button pulsating-glow-inner-yellow" style="margin-top:4px;" data-bind="tap: scn.views.inGameScreen.showGameSummaryPopup">
+                                    <div class="challenge-big-button-wrapper">
+                                            <div class="challenge-title-container">
+                                                <div class="challenge-pre-title"><div class="pre-title">How Am I Doing?</div></div>
+                                                <div class="challenge-title"><div class="title">Challenge Summary</div></div>
+                                            </div>
+                                    </div>
+                            </div>
+                        </div>
+
+
+                        <!--<div class="challenges-entered">
+                            <div id="challenges-entered">
+                                <div class="title-box">Challenges Entered</div>
+                                <div class="challenge-small-icon-container" data-bind="foreach: challengesEntered">
+                                    <div data-bind="with: challenge">
+                                        <div data-bind="attr: { class: 'icon-container ' + color().toLowerCase() + '-challenge-button' }, tap: scn.views.inGameScreen.showEnteredChallengeInfo">
+                                            <div data-bind="attr: { class: 'icon challenge-' + name().toLowerCase().replace(/\s/g, '-') }">&nbsp;</div>
+                                   
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>-->
+                    </div>
+
+                  <div class="promotion-container">
+                      <div data-bind="visible: !isGameOver()">
+                          <h1>Xbowling Tip</h1>
+                          <p>Do not forget to post your game when finished!  You will win points when someone challenges you!</p>
+                      </div>
+
+                      <div class="challenge-square-button green-challenge-button hidden" data-bind="visible: isGameOver, tap: scn.views.inGameScreen.startNewGame, showOnBind: true" style="position: absolute; top: 2%; left: 2%; width: 95%; height: 50%; text-align: center; color: white; font-weight: bold">
+                        <div class="challenge-title" style="padding-top: 15px;"><div class="title">START NEW GAME</div></div>
+                      </div>
+                      <div class="clear light-text hidden" style="width: 270px; margin: auto; margin-top: 55px; font-weight: bold; font-size: 14px;" data-bind="visible: isGameOver, showOnBind: true">
+                          <div class="blue-general-button float-left" style="width: 49%;" data-tap="scn.views.inGameScreen.postToFacebook">
+                              <img src="signup-facebook-logo.png" class="float-left" style="width: 40px;" />
+                              <span class="float-left" style="margin: 4px 0 0 2px;">Post Score<br />to Facebook</span>
+                          </div>
+                          <div class="blue-general-button float-left" style="width: 49%; margin-left: 5px;" data-tap="scn.views.inGameScreen.postToTwitter">
+                              <img src="signup-twitter-logo.png" class="float-left" style="width: 40px;" />
+                              <span class="float-left" style="margin: 4px 0 0 2px;">Post Score<br />to Twitter</span>
+                          </div>
+                          <br class="clear" />
+                      </div>
+                  </div>
+
+                </div>
+              </div>
+        </div>
+        <!---- END USER TAB ---->
+
+        <!----------***** FEATURED OPPONENTS; PAGE 1: *****---------->
+        <div id="challenger-tab"
+             class="grey-tab hidden"
+             data-bind="visible: !hasSelectedChallenger() && tab() == 'challenger-tab',
+                        showOnBind: true">
+            <div class="tab-content-container">
+                <div class="enter-lobby-container" id="no-opponent-posted-section" data-bind="visible: challengers().length == 0">
+                  <div class="message-container">
+                      <p>
+                          <span>Add Opponents to play against posted games from across the world!</span>
+                      </p>
+                  </div>
+                   <div class="button-container" style="margin-left: 60px;">
+                       <div class="enter-lobby-button purple-general-button " data-tap="scn.views.inGameScreen.showAddOpponent">
+                           <span>Add<br />Opponent</span>
+                       </div>
+                   </div>
+                </div>
+                <ul class="full-list" data-bind="visible: challengers().length > 0">
+                    <li class="button-container">
+                        <div class="in-game-button purple-general-button" style="float: left;width:auto;"
+                            data-tap="scn.views.inGameScreen.showAddOpponent">
+                            <span>Add Opponent</span>
+                        </div>
+                    </li>
+                    <!----- TABLE HEADER --------->
+                    <li class="table-header">
+                        <ul>
+                            <li class="username">Username</li>
+                            <li class="xbowling-avg">AVG / Handicap</li>
+                            <li class="score" style="width: 100px">Score / Handicap</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <!----- OPPONENTS --------->
+                <div id="challenger-tap-scroll" class="hundred-percent-width" style="height: 110px;">
+                    <ul>
+                        <!-- ko foreach: challengers -->
+                        <li class="opponent">
+                            <a class="menu-internal" data-bind="tap: scn.views.inGameScreen.challengerTap">
+                                <ul>
+                                    <li class="opponent-username">
+                                        <div class="xb-logo-container">
+                                            <div class="xb-logo">
+                                                <img src="logo-xbowling-small.png" />
+                                            </div>
+                                        </div>
+                                        <div class="opponent-name-container">
+                                            <div class="opponent-name" data-bind="text: scn.limitCharacters(userScreenName(), 15)"></div>
+                                            <div class="opponent-game-score">Region: <span data-bind="text: userRegion"></span></div>
+                                        </div>
+                                    </li>
+                                    <li class="opponent-xbowling-avg" data-bind="text: userAverage() + ' / ' + userHandicap()"></li>
+                                    <li class="opponent-score" style="width: 100px">
+                                        <div data-bind="visible: competitionGameState() != 'Entered', text: 'You ' + competitionGameState()" class="centered" style="margin-top: -5px"></div>
+                                        <div class="centered" style="margin-left: 5px; margin-top: -4px">
+                                            <span data-bind="text: opponentScore() + ' / ' + opponentHandicapScore()"></span>
+                                            <span class="neutral-arrow" data-bind="visible: opponentHandicapScore() == $parent.bowlingGameView.bowlingGame.handicapScore()">-</span>
+                                            <span class="loosing-arrow" data-bind="visible: opponentHandicapScore() > $parent.bowlingGameView.bowlingGame.handicapScore()">&#9660;</span>
+                                            <span class="winning-arrow" data-bind="visible: opponentHandicapScore() < $parent.bowlingGameView.bowlingGame.handicapScore()">&#9650;</span>
+                                        </div>
+                                    </li>
+                                    <li class="opponent-reward opponent-reward-winning">
+                                        <span>Frame View</span>
+                                    </li>
+                                </ul>
+                            </a>
+                        </li>
+                        <!-- /ko -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!---- END OPPONENT TAB ---->
+
+
+
+        <!----------***** FEATURED OPPONENT TAB PAGE 2: OPPONENT DETAIL*****---------->
+
+        <div id="challenger-detail-tab"
+             class="grey-tab hidden"
+             data-bind="if: selectedChallengerBound, visible: hasSelectedChallenger() && tab() == 'challenger-tab', showOnBind: true">
+            <div class="tab-content-container">
+                <div style="height: 170px" id="posted-game-scroll">
+                    <div class="challenge-section posted-challenge-section" style="height: 225px;">
+                        <div class="challenge-container">
+                            <div class="opponent-container" style="margin-bottom: 5px">
+                                <div class="back-to-opponents">
+                                    <a class="menu-internal" data-tab="tab-2">
+                                        <div class="challenge-big-button purple-general-button">
+                                            <div class="challenge-icon">
+                                                <div class="icon">
+                                                    <img src="icon-big-arrow.png" /></div>
+                                            </div>
+                                            <div class="challenge-title" data-bind="tap: scn.views.inGameScreen.showOpponentsTab">
+                                                <div class="title">Back To All Opponents</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            <!--div class="opponent-pin-container">
+                                <div class="bg-pins">
+                                    <img src="bg-pins.png" />
+                                </div>
+                                <div class="pins">
+                                    <div class="pin-row">
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(64, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(64, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(128, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(128, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(256, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(256, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(512, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(512, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                    </div>
+                                    <div class="pin-row">
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(8, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(8, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(16, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(16, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(32, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(32, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                    </div>
+                                    <div class="pin-row">
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(2, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(2, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(4, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(4, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                    </div>
+                                    <div class="pin-row">
+                                        <div data-bind="css: { 'pin-graphic': scn.checkFlag(1, scn.views.inGameScreen.getStandingPinArray($data)), 'pin-placement': !scn.checkFlag(1, scn.views.inGameScreen.getStandingPinArray($data)) }"></div>
+                                    </div>
+                                </div>
+                            </div-->
+                        </div>
+                        <!--div class="advert-container">
+                            <div class="advert"></div>
+                        </div-->
+                        <div class="frame-section" data-bind="with: bowlingGameView.bowlingGame">
+                            <div class="player-info-container">
+                                    <span class="username" style="float: left;">My Game</span>
+                                    <span class="handicap-score" style="text-align: right; position: absolute; right: 0;">
+                                        <span class="score-differential" style="float: right; margin-left: 4px;" data-bind="text: scn.views.inGameScreen.getScoreDifferentialPosted([$data, $parent.selectedChallenger], $data, $element, 'Handicap')"></span>
+                                        <span data-bind="text: 'Handicap Score: ' + handicapScore()" style="float: right"></span>
+                                    </span>
+                                </div>
+                            <div data-template="Scores" style="margin: 5px 0 0 0; float: left;">
+                            </div>
+                        </div>
+                        <div class="frame-section" data-bind="with: selectedChallenger">
+                            <div class="player-info-container">
+                                    <span class="username" style="float: left;" data-bind="text: scn.limitCharacters(name(), 15)"></span>
+                                    <span class="handicap-score" style="text-align: right; position: absolute; right: 0;">
+                                        <span class="score-differential" style="float: right; margin-left: 4px;" data-bind="text: scn.views.inGameScreen.getScoreDifferentialPosted([$parent.bowlingGameView.bowlingGame, $data], $data, $element, 'Handicap')"></span>
+                                        <span data-bind="text: 'Handicap Score: ' + handicapScore()" style="float: right"></span>
+                                    </span>
+                                </div>
+                            <div data-template="Scores" style="margin: 5px 0 0 0; float: left;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!---- END OPPONENT TAB ---->
+
+
+        <!----------***** LIVE GAME TAB PAGE 1*****---------->
+        <div id="tab-4" data-bind="visible: tab() == 'tab-4', showOnBind: true" class="hidden">
+          <div class="tab-content-container" data-bind="visible: liveCompetitionId() < 1">
+              <div class="enter-lobby-container">
+                  <div class="message-container">
+                      <p>
+                          <span data-bind="visible: liveCompetitionRejected()">Oh no! The organizer rejected your entry into the live game.<br /><br />Find another game by tapping the Join Game button below!<br /></span>
+                          <span data-bind="visible: !liveCompetitionRejected()">YOU ARE  NOT CURRENTLY<br /> ENTERED IN A LIVE GAME. <br /><br />choose below.</span>
+                      </p>
+                  </div>
+                   <div class="button-container">
+                       <div class="enter-lobby-button green-general-button " data-tap="scn.views.inGameScreen.createGameTap">
+                           <span>Create<br />
+                               Game</span>
+                       </div>
+                   </div>
+
+                  <div class="button-container">
+                      <div class="enter-lobby-button green-general-button " data-tap="scn.views.inGameScreen.joinLiveGameTap">
+                          <span>Join<br />
+                              Game</span>
+                      </div>
+                  </div>
+
+
+
+              </div>
+          </div>
+            <div class="tab-content-container" data-bind="visible: liveCompetitionId() > 0 && waitingForLiveCompetitionApproval()">
+              <div class="enter-lobby-container">
+                  <div class="message-container">
+                      <p>
+                          WAITING FOR THE ORGANIZER TO APPROVE YOU...
+                      </p>
+                  </div>
+              </div>
+          </div>
+          <div class="tab-content-container" id="tab-4-scroller" data-bind="visible: liveCompetitionId() > 0 && !waitingForLiveCompetitionApproval()">
+              <div>
+                  <div class="enter-lobby-container" data-bind="visible: liveCompetitionComplete()" style="width: 75%;">
+                    <div class="message-container hundred-percent-width" style="font-family: 'Arial Black'">
+                      <p class="hundred-percent-width" style="color: #dfde22; font-size: 13px;" data-bind="visible: liveCompetitionGameState() === 'Won' || liveCompetitionGameState() === 'Tied'">Congratulations! You won the game and won <span data-bind="text: scn.addCommas(liveCompetitionPayout())"></span> points!</p>
+                      <p data-bind="visible: liveCompetitionGameState() === 'Cancelled' || liveCompetitionGameState() === 'Lost'">Better Luck Next Time!</p>
+                    </div>
+                  </div>
+                  <div data-bind="foreach: { data: liveChallengers, afterAdd: scn.views.inGameScreen.onAfterLiveChallengerAdd }">
+                        <div class="frame-section-live" >
+                              <div class="player-info-container">
+                                  <span class="user-type" data-bind="text: isHost() ? 'host' : ''"></span>
+                                  <span class="username" data-bind="text: scn.limitCharacters(screenName(), 15)"></span><span class="at">@</span><span class="center-location" data-bind="text: venue.name"></span><span class="in">in</span>
+                                  <span class="state" data-bind="text: venue.address.administrativeArea.shortName"></span><span class="comma">,&nbsp;</span><span class="country" data-bind="text: venue.address.country.countryCode"></span>
+                                  <span class="handicap-score" data-bind="visible: scoringMode() == 'Handicap'">
+                                      Handicap Score: 
+                                      <span data-bind="text: scoredGame.handicapScore"></span>
+                                      <span class="score-differential" data-bind="text: scn.views.inGameScreen.getScoreDifferentialLive($parent.liveChallengers(), scoredGame, $element, 'Handicap')"></span>
+                                  </span>
+                                  <span class="handicap-score" data-bind="visible: scoringMode() == 'Scratch'">
+                                      Score: 
+                                      <span data-bind="text: scoredGame.finalScore"></span>
+                                      <span class="score-differential" data-bind="text: scn.views.inGameScreen.getScoreDifferentialLive($parent.liveChallengers(), scoredGame, $element, 'Scratch')"></span>
+                                  </span>
+                              </div>
+                              <div data-template="Scores" data-bind="with: scoredGame"></div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+         </div>
+
+
+         <!----------***** VIB TAB *****---------->
+        <div id="vib-tab"
+             data-bind="visible: tab() == 'vib-tab', showOnBind: true" class="hidden">
+          <div class="tab-content-container honeycomb-background">
+              <!--div class="vib-message-container"><p>SELECT VIBs TO PLAY AGAINST! EACH ENTRY COSTS $2.50.</p></div-->
+              <br />
+              <div id="vib-scroll" style="height: 155px">
+                  <ul id="vib-inner-scroll" style="height: 300px" data-bind="visible: vibChallengers().length == 0">
+                        <li data-bind="visible: !vibLoaded()">
+                            <div class="light-text centered">Loading VIBs... Please wait...</div>
+                        </li>
+                        <li data-bind="visible: vibLoaded() && vibList().length == 0">
+                            <div class="light-text centered">No VIB games are available to enter right now.  Check back regularly for a chance to bowl against celebrities, professional bowlers, and other VIBs!</div>
+                        </li>
+                        <!-- ko foreach: vibList -->
+                        <li class="vib-list-item">
+                            <div class="checkbox-wrapper" data-bind="tap: scn.views.inGameScreen.vibCheck">
+                                <div class="checkbox" data-bind="css: { 'checkbox-checked': selected }"></div>
+                                <div class="light-text centered bold" data-bind="text: '$' + (vibEntryPackage.priceUsPennies() / 100).toFixed(2)"></div>
+                            </div>
+                            <div class="details" data-bind="with: vibProfile">
+                                <div style="float: left; margin-left: 50px;">
+                                    <h2 data-bind="text: name"></h2>
+                                    <h3 data-bind="text: title"></h3>
+                                    <span data-bind="tap: scn.views.inGameScreen.showVibPlayerCardPopup">View Player Card</span>
+                                </div>
+                                <img data-bind="attr: { src: pictureFile.fileUrl }" width="75" style="float: right; top: -15px;" />
+                            </div>
+                        </li>
+                        <!-- /ko -->
+
+                        <li>
+                           <div class="button-container" style="margin-top: 5px;" data-bind="visible: selectedVibList().length > 0">
+                              <div class="green-general-button" style="width: 125px;border-radius: 3px; float: right; margin-right: 25px; display: block; text-align: center;" data-tap="scn.views.inGameScreen.enterVibCompetitions">
+                                  <span class="two-line-text" style="color: white;text-align: center; font-weight: bold; font-size: 13px;">ENTER<br />COMPETITION<span data-bind="visible: selectedVibList().length > 1">S</span></span>
+                              </div>
+                          </div>
+                      </li>
+                  </ul>
+
+                  <div id="vib-score-scroll" style="height: 155px;">
+                    <div data-bind="foreach: vibChallengers">
+                        <div class="frame-section-live frame-section-vib" >
+                              <div class="player-info-container">
+                                  <span class="user-type" data-bind="text: isHost() ? 'VIB' : ''"></span>
+                                  <span class="username" data-bind="text: scn.limitCharacters(screenName(), 15)"></span>
+                                  <span class="handicap-score" data-bind="visible: scoringMode() == 'Scratch'">
+                                      Score: 
+                                      <span data-bind="text: scoredGame.finalScore"></span>
+                                      <span class="score-differential" data-bind="text: scn.views.inGameScreen.getScoreDifferentialLive($parent.liveChallengers(), scoredGame, $element, 'Scratch')"></span>
+                                  </span>
+                              </div>
+                              <div data-template="Scores" data-bind="with: scoredGame"></div>
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+        </div>
+        <!---- END VIB TAB ---->
+      </div>
+    </div>
+</div>
+
+
+
+
+<div id="in-game-screen-celebration" class="hwaccel animated bounceIn celebration hidden">
+    <span class="celebration-background-text"></span>
+    <span class="celebration-text-shadow-container"></span>
+    <span class="celebration-text-container"></span>
+</div>
+<div id="in-game-screen-footer" data-template="Footer"></div>
+
+<script type="text/javascript">
+    (function (inGameScreen) {
+        UPDATE_SCORE_FREQUENCY_MILLISECONDS = 7000,
+        UPDATE_CHALLENGE_FREQUENCY_MILLISECONDS = 7000,
+        UPDATE_POSTED_FREQUENCY_MILLISECONDS = 8000,
+        UPDATE_LIVE_FREQUENCY_MILLISECONDS = 7500,
+        UPDATE_VIB_FREQUENCY_MILLISECONDS = 7500,
+
+        _celebrationSound = null,
+
+        inGameScreen.viewModel = function (bowlingGameId, laneCheckoutId) {
+            // general
+            this.tab = ko.observable("tab-1");
+            this.loadingChallengeUpdate = ko.observable(false);
+            this.loadingScoreUpdate = ko.observable(false);
+            this.bowlingGameId = ko.observable(bowlingGameId);
+            this.laneCheckoutId = ko.observable(laneCheckoutId);
+            this.loadedCount = ko.observable(0);
+            this.isGameOver = ko.observable(false);
+            this.loadingStartNewGame = ko.observable(false);
+            this.latestSquareNumber = ko.observable(0);
+
+            // my game tab
+            this.bowlingGameView = null;
+            this.challengesEntered = null;
+            /*this.hasChallenges = ko.computed(function () {
+                return this.bowlingGameView != null
+                    && this.bowlingGameView.suggestedChallengeList().length > 0;
+            }, this);*/
+
+            // challengers tab
+            this.challengers = ko.mapping.fromJS([]);
+            this.selectedChallenger = ko.mapping.fromJS({});
+            this.selectedChallengerBound = ko.observable(false);
+            this.hasSelectedChallenger = ko.observable(false);
+
+            // live tab
+            this.liveCompetitionId = ko.observable(0);
+            this.isCompetitionCreator = ko.observable(false);
+            this.liveCompetitionEntryFeeCredits = ko.observable(0);
+            this.liveChallengers = ko.mapping.fromJS([]);
+            this.waitingForLiveCompetitionApproval = ko.observable(false);
+            this.liveCompetitionRejected = ko.observable(false);
+            this.liveCompetitionGameState = ko.computed(function () {
+                // states: Entered, Cancelled, Won, Lost, Tied, Pending, Rejected
+                var arr = this.liveChallengers();
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i].scoredGame && arr[i].scoredGame.bowlingGameId() == this.bowlingGameId()) {
+                        return arr[i].state();
+                    }
+                }
+            }, this);
+            this.liveCompetitionComplete = ko.computed(function () {
+                var state = this.liveCompetitionGameState();
+                return (state === "Cancelled" || state === "Won" || state === "Lost" || state === "Tied");
+            }, this);
+            this.liveCompetitionPayout = ko.computed(function () {
+                if (this.liveCompetitionComplete()) {
+                    var challengers = this.liveChallengers();
+                    var payout = scn.calculateLivePayout(this.liveCompetitionEntryFeeCredits());
+
+                    if (this.liveCompetitionGameState() === "Tied") {
+                        if (this.bowlingGameView == null || this.bowlingGameView.bowlingGame)
+                            return;
+
+                        var scores = {};
+                        for (var i = 0; i < challengers.length; i++) {
+                            var challengerScore = challengers[i].scoredGame.finalScore();
+                            if (!scores[challengerScore])
+                                scores[challengerScore] = 0;
+                            scores[challengerScore]++;
+                        }
+
+                        var currentScore = this.bowlingGameView.bowlingGame.finalScore();
+                        if (scores[currentScore]) {
+                            return Math.floor(payout / scores[currentScore]);
+                        } else {
+                            return 0;
+                        }
+                    } else {
+                        return payout;
+                    }
+                }
+
+                return 0;
+            }, this);
+
+            // vib tab
+            this.vibList = ko.mapping.fromJS([]);
+            this.selectedVibList = ko.observableArray([]);
+            this.vibLoaded = ko.observable(false);
+            this.vibChallengers = ko.mapping.fromJS([]);
+            this.hasVib = ko.observable(false);
+        },
+
+        inGameScreen.load = function () {
+            var elm = jQuery(this);
+
+            var viewParams = scn.viewEngine.getViewIdFromHash();
+            var viewModel = new inGameScreen.viewModel(
+                parseInt(viewParams.params.bowlingGame),
+                parseInt(viewParams.params.laneCheckout));
+
+            // store it
+            scn.storeLastGameInfo(viewModel.bowlingGameId(), viewModel.laneCheckoutId(), "Machine");
+
+            var tabs = jQuery("[data-tab]", elm);
+            for (var i = 0; i < tabs.length; i++) {
+                var tab = jQuery(tabs[i]);
+                scn.viewEngine.wireTap(
+                    tabs[i],
+                    function () {
+                        var tabToShow = jQuery(this.element);
+                        viewModel.tab(tabToShow.attr("data-tab"));
+
+                        var onShow = tabToShow.attr("data-tab-onshow");
+                        if (onShow) {
+                            scn.viewEngine.callFunction(tabToShow, onShow);
+                        }
+                    });
+            }
+
+            // loaded count tracks to make sure both sections of the game tab have
+            // loaded before applying bindings to the tab
+            var loadedCountSubscription = viewModel.loadedCount.subscribe(function (newValue) {
+                if (newValue == 2) {
+                    ko.applyBindings(viewModel, elm.get(0));
+
+                    inGameScreen.loadChallengers(viewModel);
+                    var updatedPostedInterval = setInterval(
+                       function () {
+                           if (!scn.paused) {
+                               inGameScreen.loadChallengers(viewModel);
+                           }
+                       }, UPDATE_POSTED_FREQUENCY_MILLISECONDS);
+                    scn.viewEngine.registerInterval("updatePosted", updatedPostedInterval);
+
+                    inGameScreen.loadLiveCompetitionId(viewModel, function () {
+                        inGameScreen.loadLiveCompetition(viewModel);
+                    });
+                    var updateLiveCompetitionInterval = setInterval(
+                        function () {
+                            if (!scn.paused) {
+                                inGameScreen.loadLiveCompetition(viewModel);
+                            }
+                        }, UPDATE_LIVE_FREQUENCY_MILLISECONDS);
+                    scn.viewEngine.registerInterval("updateLive", updateLiveCompetitionInterval);
+
+                    var firstVibLoad = true;
+                    var updateVibCompetitionInterval = setInterval(
+                        function () {
+                            if (!scn.paused) {
+                                inGameScreen.loadVibScores(viewModel, firstVibLoad);
+                                firstVibLoad = false;
+                            }
+                        }, UPDATE_VIB_FREQUENCY_MILLISECONDS);
+                    scn.viewEngine.registerInterval("updateVib", updateVibCompetitionInterval);
+                }
+            });
+
+            scn.viewEngine.registerViewDestructor(function () {
+                if (loadedCountSubscription) {
+                    loadedCountSubscription.dispose();
+                    loadedCountSubscription = null;
+                }
+            });
+
+            if (window.Media) {
+                try {
+                    var prefix = scn.isAppleDevice() ? "videos/" : "/android_asset/";
+                    _celebrationSound = new Media(prefix + "celebrationsound.m4a",
+                        function () { console.log("audio success"); },
+                        function (e) { console.log("audio error"); }
+                    );
+                } catch (ex) {
+                    _celebrationSound = null;
+                }
+            }
+
+            scn.viewEngine.registerViewDestructor(function () {
+                if (_celebrationSound && _celebrationSound.release) {
+                    _celebrationSound.release();
+                }
+            });
+
+            // show enter challenges popup
+            var skipChallengePopup = viewParams.params.skipChallengePopup;
+            if (!skipChallengePopup || skipChallengePopup.toLowerCase() !== "true") {
+                showAvailableChallengePopup(viewModel, elm, false, function () {
+                    var hasSeenHandicapPopup = localStorage.getItem("scn-has-seen-handicap-popup");
+                    if (hasSeenHandicapPopup !== "true") {
+                        setTimeout(function () {
+                            var viewParams = scn.viewEngine.getViewIdFromHash();
+                            if (viewParams.viewId === "new-2-InGameScreen") {
+                                scn.popup.show("HandicapInfoPopup");
+                                localStorage.setItem("scn-has-seen-handicap-popup", "true");
+                            }
+                        }, 10000);
+                    }
+                });
+            }
+
+            inGameScreen.updateScore(viewModel, true, elm);
+            var updateScoreInterval = setInterval(
+                function () {
+                    if (!scn.paused) {
+                        inGameScreen.updateScore(viewModel, false, elm);
+                    }
+                }, UPDATE_SCORE_FREQUENCY_MILLISECONDS);
+            scn.viewEngine.registerInterval("updateScore", updateScoreInterval);
+
+            inGameScreen.updateChallenge(viewModel, true, elm);
+            /*var updateChallengeInterval = setInterval(
+                function () {
+                    inGameScreen.updateChallenge(viewModel, false, elm);
+                }, UPDATE_CHALLENGE_FREQUENCY_MILLISECONDS);
+            scn.viewEngine.registerInterval("updateChallenge", updateChallengeInterval);*/
+        },
+
+        inGameScreen.updateChallenge = function (viewModel, showLoading, containerElm) {
+            if (viewModel.loadingChallengeUpdate())
+                return;
+
+            viewModel.loadingChallengeUpdate(true);
+
+            if (showLoading)
+                scn.showLoading();
+
+            scn.ajax({
+                url: scn.apiAddress + "lanecheckout/" + viewModel.laneCheckoutId() + "/enteredchallenges",
+                type: "GET",
+                data: {},
+                success: function (data) {
+                    viewModel.loadingChallengeUpdate(false);
+
+                    if (showLoading)
+                        scn.hideLoading();
+
+                    if (viewModel.challengesEntered == null) {
+                        viewModel.challengesEntered = ko.mapping.fromJS(data);
+                    } else {
+                        ko.mapping.fromJS(data, viewModel.challengesEntered);
+                    }
+
+                    viewModel.loadedCount(viewModel.loadedCount() + 1);
+                },
+                error: function (jqXhr, status) {
+                    viewModel.loadingChallengeUpdate(false);
+                    console.log("Error loading challenge updates.");
+
+                    if (showLoading)
+                        scn.hideLoading();
+                }
+            });
+        },
+
+        inGameScreen.updateScore = function (viewModel, showLoading, containerElm) {
+            if (viewModel.loadingScoreUpdate())
+                return;
+
+            viewModel.loadingScoreUpdate(true);
+
+            if (showLoading)
+                scn.showLoading();
+
+            scn.ajax({
+                url: scn.apiAddress + "lanecheckout/" + viewModel.laneCheckoutId() + "/bowlinggameview",
+                type: "GET",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+                    viewModel.loadingScoreUpdate(false);
+
+                    if (showLoading)
+                        scn.hideLoading();
+
+                    // game data
+                    //tabsnav
+                    //tab-1
+                    var scoresElm = jQuery("#tab-1", containerElm);
+
+                    var firstLoad = viewModel.bowlingGameView == null;
+
+                    if (firstLoad) {
+                        viewModel.bowlingGameView = ko.mapping.fromJS(data);
+                    } else {
+                        ko.mapping.fromJS(
+                            data,
+                            {
+                                key: function (item) {
+                                    return ko.utils.unwrapObservable(item.bowlingGameId);
+                                }
+                            },
+                            viewModel.bowlingGameView);
+                    }
+
+                    var bowlingGame = viewModel.bowlingGameView.bowlingGame;
+                    var lastSquare = scoresElm.data("lastSquare");
+                    var updateLastSquare = bowlingGame.latestSquareNumber();
+
+                    viewModel.latestSquareNumber(updateLastSquare);
+
+                    if (updateLastSquare > 0 && lastSquare != updateLastSquare) {
+                        // if first square, check for point updates because you get points for activation
+                        if (!lastSquare) {
+                            scn.views.footer.populateWallet();
+                        }
+
+                        var squareScore = bowlingGame["squareScore" + updateLastSquare]();
+
+                        var checkForStrike = true;
+
+                        if ((updateLastSquare % 2) == 0) {
+                            // even means it is a second throw
+                            // check for a spare
+                            checkForStrike = false;
+                            if (squareScore == "/") {
+                                //scn.video.play("videos/spare.m4v", { fullScreen: true, endOnTap: true });
+                                showCelebration("SPARE!", "/");
+                            } else if (updateLastSquare == 20) {
+                                // could be a strike on 20 if not a spare
+                                checkForStrike = true;
+                            }
+                        }
+
+                        if (checkForStrike) {
+                            // odd (and not bonus square) means it is a first throw
+                            // check for a strike
+                            if (squareScore == "X") {
+                                // this is a strike
+                                var strikesInARow = 1;
+
+                                var currentSquareToCheck = updateLastSquare - 1;
+                                while (currentSquareToCheck > 0)
+                                {
+                                    var lastThrowSquareScore = bowlingGame["squareScore" + currentSquareToCheck]();
+                                    if (lastThrowSquareScore) {
+                                        if (lastThrowSquareScore == "X") {
+                                            strikesInARow++;
+                                        } else if (lastThrowSquareScore != "") {
+                                            break;
+                                        }
+                                    }
+
+                                    currentSquareToCheck--;
+                                }
+
+                                // only display up to the last 4 strikes in a row
+                                while (strikesInARow > 4) {
+                                    strikesInARow -= 4;
+                                }
+
+                                if (strikesInARow == 1) {
+                                    showCelebration("STRIKE!", "X");
+                                } else if (strikesInARow == 2) {
+                                    showCelebration("DOUBLE STRIKE!", "XX");
+                                } else if (strikesInARow == 3) {
+                                    showCelebration("TURKEY!", "XXX");
+                                } else if (strikesInARow == 4) {
+                                    showCelebration("QUADRUPLE STRIKE!", "XXXX");
+                                }
+
+                                //scn.video.play("videos/strike.m4v", { fullScreen: true, endOnTap: true });
+                            }
+                        }
+
+                        scoresElm.data("lastSquare", updateLastSquare);
+                    }
+
+                    var currentFrameNumber = updateLastSquare == 21 ? 10 : Math.ceil(updateLastSquare / 2.0);
+                    jQuery("#ingamescreen-scores > li", containerElm).removeClass("current-li");
+                    jQuery("#ingamescreen-scores > li:nth-child(" + currentFrameNumber + ")", containerElm).addClass("current-li");
+
+                    var wasComplete = viewModel.isGameOver();
+                    var isComplete = bowlingGame.isComplete();
+
+                    if (isComplete && (wasComplete != isComplete)) {
+                        viewModel.isGameOver(true);
+
+                        var shownPostGamePopupForGame = false;
+                        var shownPostGamePopups = sessionStorage.getItem("scn-shown-post-game-popups");
+                        if (shownPostGamePopups) {
+                            shownPostGamePopups = JSON.parse(shownPostGamePopups);
+                        } else {
+                            shownPostGamePopups = [];
+                        }
+
+                        for (var i = 0; i < shownPostGamePopups.length; i++) {
+                            if (shownPostGamePopups[i] == bowlingGame.bowlingGameId()) {
+                                shownPostGamePopupForGame = true;
+                                break;
+                            }
+                        }
+
+                        if (!shownPostGamePopupForGame) {
+                            // game is now complete, ask to post
+                            scn.popup.show("GameCompletePopup", {
+                                viewModel: bowlingGame
+                            });
+
+                            shownPostGamePopups.push(bowlingGame.bowlingGameId());
+                            sessionStorage.setItem("scn-shown-post-game-popups", JSON.stringify(shownPostGamePopups));
+                        }
+                    }
+
+                    // find the header elm so we can scope the points update on it
+                    var inGameScreenWrapper = containerElm.is("#in-game-screen-wrapper")
+                        ? containerElm
+                        : containerElm.parents("#in-game-screen-wrapper:first");
+                    var header = inGameScreenWrapper.siblings("#in-game-screen-header:first");
+                    scn.views.header.updateGamePoints(data.gamePoints, null, header);
+                    scn.views.header.updateAllTimePoints(data.allTimePoints, null, header, firstLoad);
+
+                    // find the footer elm so we can scope the points update on it
+                    var footer = inGameScreenWrapper.siblings("#in-game-screen-footer:first");
+                    scn.views.footer.updatePoints(data.availableRewardPoints, null, footer);
+
+                    viewModel.loadedCount(viewModel.loadedCount() + 1);
+                },
+                error: function (jqXhr, status) {
+                    viewModel.loadingScoreUpdate(false);
+
+                    if (showLoading)
+                        scn.hideLoading();
+                }
+            });
+        },
+
+        showCelebration = function (text, backgroundText) {
+            var celebrationElm = jQuery("#in-game-screen-celebration");
+
+            var backgroundTextElm = celebrationElm.children(":first");
+            var textShadowContainerElm = celebrationElm.children(":nth-child(2)");
+            var textContainerElm = celebrationElm.children(":nth-child(3)");
+
+            var className = "celebration-text-large";
+            if (text.length > 6) {
+                className = "celebration-text-medium";
+                if (text.length > 15) {
+                    className = "celebration-text-small";
+                }
+            }
+
+            var backgroundClassName = "celebration-background-text-large";
+            if (backgroundText.length > 3) {
+                backgroundClassName = "celebration-background-text-medium";
+            }
+
+            textContainerElm.children().detach();
+            textShadowContainerElm.children().detach();
+
+            backgroundTextElm.text(backgroundText);
+            backgroundTextElm.addClass(backgroundClassName);
+
+            var splitText = text.split(" ");
+            for (var i = 0; i < splitText.length; i++) {
+                var shadowSpan = jQuery("<span />")
+                                .text(splitText[i])
+                                .addClass("celebration-text-shadow")
+                                .addClass(className);
+                textShadowContainerElm.append(shadowSpan);
+
+                var span = jQuery("<span />")
+                                .text(splitText[i])
+                                .addClass("celebration-text")
+                                .addClass(className);
+                textContainerElm.append(span);
+            }
+
+            celebrationElm.removeClass("hidden");
+
+            var width = 0;
+            var height = 0;
+            var children = textContainerElm.children();
+            for (var i = 0; i < children.length; i++) {
+                var childElm = jQuery(children[i]);
+                height += childElm.height();
+                if (childElm.width() > width)
+                    width = childElm.width();
+            }
+
+            backgroundTextElm.css("left", ((scn.viewEngine.windowWidth - backgroundTextElm.width()) / 2) + "px");
+            textContainerElm.css("left", ((scn.viewEngine.windowWidth - width) / 2) + "px");
+            textContainerElm.css("top", ((backgroundTextElm.height() - height) / 2) + "px");
+            textShadowContainerElm.css("left", ((scn.viewEngine.windowWidth - width) / 2) + "px");
+            textShadowContainerElm.css("top", ((backgroundTextElm.height() - height) / 2) + "px");
+
+            var confettiId = scn.confetti.render(jQuery("#in-game-screen-wrapper"));
+            setTimeout(function () {
+                scn.confetti.stop(confettiId);
+                celebrationElm.addClass("hidden");
+            }, 7000);
+
+            if (_celebrationSound) {
+                _celebrationSound.seekTo(0);
+                _celebrationSound.play({ playAudioWhenScreenIsLocked: false });
+            }
+        },
+
+        showChallengePopup = function (elm, alreadyEntered) {
+            elm = jQuery(elm);
+
+            var challenge = ko.dataFor(elm.get(0));
+
+            scn.popup.show("ChallengePopup", {
+                viewModel: challenge
+            });
+        },
+
+        inGameScreen.showEnteredChallengeInfo = function () {
+            showChallengePopup(this.element, true);
+        },
+
+        inGameScreen.loadChallengers = function (viewModel, complete) {
+            var scrollElm = jQuery("#challenger-tap-scroll");
+            var scrollElmDom = scrollElm.get(0);
+            var iscr;
+            if (scrollElmDom) {
+                iscr = scrollElmDom.iScroll;
+                if (!iscr) {
+                    iscr = new iScroll(scrollElmDom, {
+                        snap: false,
+                        momentum: false,
+                        hScroll: false,
+                        hScrollbar: false,
+                        vScroll: true,
+                        vScrollbar: false
+                    });
+
+                    scn.viewEngine.registerViewDestructor(function () {
+                        if (iscr) {
+                            iscr.destroy();
+                            iscr = null;
+                        }
+                    });
+                }
+            }
+
+            scn.ajax({
+                url: scn.apiAddress + "bowlinggame/" + viewModel.bowlingGameId() + "/challengers",
+                type: "GET",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+                    ko.mapping.fromJS(
+                        data,
+                        {
+                            key: function (item) {
+                                return ko.utils.unwrapObservable(item.competitionId);
+                            }
+                        },
+                        viewModel.challengers);
+
+                    if (complete) {
+                        complete();
+                    }
+
+                    if (iscr) {
+                        var innerScrollElm = scrollElm.children(":first");
+                        innerScrollElm.height(data.length * 45);
+                        iscr.refresh();
+                    }
+                },
+                error: function (data) {
+                    if (complete) {
+                        complete();
+                    }
+                }
+            });
+
+
+        },
+
+        inGameScreen.loadLiveCompetitionId = function (viewModel, success) {
+            scn.ajax({
+                url: scn.apiAddress + "bowlinggame/" + viewModel.bowlingGameId() + "/competition/live",
+                type: "GET",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+                    if (data) {
+                        viewModel.liveCompetitionId(data.id);
+                        viewModel.isCompetitionCreator(data.creatorBowlingGame.id == viewModel.bowlingGameId());
+                        viewModel.liveCompetitionEntryFeeCredits(data.entryFeeCredits);
+                    }
+
+                    if (success) {
+                        success();
+                    }
+                },
+                error: function (data) {
+
+                }
+            });
+        },
+
+        inGameScreen.liveTabShow = function () {
+            var scrollElm = document.getElementById("tab-4-scroller");
+            if (scrollElm.iScroll) {
+                scrollElm.iScroll.refresh();
+            }
+        },
+
+        inGameScreen.loadLiveCompetition = function (viewModel) {
+            if (viewModel.liveCompetitionId() < 1) {
+                return;
+            }
+
+            scn.ajax({
+                url: scn.apiAddress + "bowlingcompetition/live/" + viewModel.liveCompetitionId() + "/challengers",
+                type: "GET",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+                    if (data.waitingForApproval) {
+                        return;
+                    }
+
+                    viewModel.waitingForLiveCompetitionApproval(false);
+                    viewModel.liveCompetitionRejected(false);
+
+                    ko.mapping.fromJS(
+                        data,
+                        {
+                            key: function (item) {
+                                return ko.utils.unwrapObservable(item.bowlingGameId);
+                            }
+                        },
+                        viewModel.liveChallengers);
+
+                    var scrollElm = document.getElementById("tab-4-scroller");
+                    var innerScroll = scrollElm.children[0];
+                    innerScroll.style.height = ((data.length * 125) + (viewModel.liveCompetitionComplete() ? 100 : 0)) + "px";
+
+                    if (!scrollElm.iScroll) {
+                        // challenge list scroller
+                        var scroll = new iScroll(scrollElm, {
+                            snap: false,
+                            momentum: false,
+                            hScroll: false,
+                            hScrollbar: false,
+                            vScroll: true,
+                            vScrollbar: false
+                        });
+                        scn.viewEngine.registerViewDestructor(function () {
+                            if (scroll) {
+                                scroll.destroy();
+                                scroll = null;
+                            }
+                        });
+                    }
+
+                    scrollElm.iScroll.refresh();
+                },
+                error: function (jqXhr, txtStatus) {
+                    if (jqXhr.status == 401) {
+                        viewModel.waitingForLiveCompetitionApproval(false);
+                        viewModel.liveCompetitionRejected(true);
+                        viewModel.liveCompetitionId(0);
+                    }
+                }
+            });
+        },
+
+        inGameScreen.challengerTap = function () {
+            var elm = jQuery(this.element);
+
+            // load it
+            //var competitionId = viewModel.competitionId();
+            //var opponentGameId = viewModel.gameId();
+            var challengerViewModel = ko.dataFor(elm.get(0));
+            var parentViewModel = ko.dataFor(elm.parents(".tab-content-container:first").get(0));
+
+            loadSelectedChallenger(challengerViewModel, parentViewModel);
+            var refreshInterval = setInterval(loadSelectedChallenger, UPDATE_LIVE_FREQUENCY_MILLISECONDS, challengerViewModel, parentViewModel);
+            scn.viewEngine.registerInterval("updateChallenger", refreshInterval);
+
+            var parentViewModel = ko.dataFor(elm.parents(".tab-content-container:first").get(0));
+            var subscription = parentViewModel.hasSelectedChallenger.subscribe(function (newValue) {
+                clearInterval(refreshInterval);
+            });
+
+            scn.viewEngine.registerViewDestructor(function () {
+                if (subscription) {
+                    subscription.dispose();
+                }
+            });
+        },
+
+        loadSelectedChallenger = function (challengerViewModel, parentViewModel) {
+            parentViewModel.hasSelectedChallenger(true);
+
+            scn.ajax({
+                url: scn.apiAddress + "bowlinggame/" + parentViewModel.bowlingGameId() + "/challengers/posted/" + challengerViewModel.competitionId() + "/bowlinggame/" + challengerViewModel.opponentBowlingGameId(),
+                type: "GET",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+                    if (!parentViewModel.selectedChallengerBound()) {
+                        ko.mapping.fromJS(
+                            data,
+                            {
+                                key: function (item) {
+                                    return ko.utils.unwrapObservable(item.bowlingGameId);
+                                }
+                            },
+                            parentViewModel.selectedChallenger);
+                        parentViewModel.selectedChallengerBound(true);
+
+                        var scrollElm = jQuery("#posted-game-scroll");
+                        var scrollElmDom = scrollElm.get(0);
+                        if (!scrollElmDom.iScroll) {
+                            var iscr = new iScroll(scrollElmDom, {
+                                snap: false,
+                                momentum: false,
+                                hScroll: false,
+                                hScrollbar: false,
+                                vScroll: true,
+                                vScrollbar: false
+                            });
+
+                            scn.viewEngine.registerViewDestructor(function () {
+                                if (iscr) {
+                                    iscr.destroy();
+                                    iscr = null;
+                                }
+                            });
+                        }
+
+                        scrollElmDom.iScroll.refresh();
+                    } else {
+                        ko.mapping.fromJS(
+                            data,
+                            {
+                                key: function (item) {
+                                    return ko.utils.unwrapObservable(item.bowlingGameId);
+                                }
+                            },
+                            parentViewModel.selectedChallenger);
+                    }
+                },
+                error: function () {
+                    //  alert("An error occurred loading the Challenger information.  Please try again.");
+                }
+            });
+        },
+
+        inGameScreen.showOpponentsTab = function () {
+            var challengerDetailTab = jQuery(this.element).parents("#challenger-detail-tab:first");
+            var viewModel = ko.dataFor(challengerDetailTab.get(0));
+            viewModel.hasSelectedChallenger(false);
+            //ko.mapping.fromJS(null, viewModel.selectedChallenger);
+        },
+
+        inGameScreen.showAddOpponent = function () {
+            var viewModel = ko.dataFor(this);
+
+            scn.popup.show("AddOpponentPopup", {
+                viewModel: {
+                    bowlingGameId: viewModel.bowlingGameId(),
+                    competitionType: "Posted"
+                },
+                callback: function (callbackData) {
+                    scn.showLoading();
+                    inGameScreen.loadChallengers(viewModel, function () {
+                        scn.hideLoading();
+                    });
+                },
+                height: "auto"
+            });
+        },
+
+        inGameScreen.joinLiveGameTap = function () {
+            var viewModel = ko.dataFor(this);
+
+            scn.popup.show("JoinGamePopup", {
+                viewModel: {
+                    bowlingGameId: viewModel.bowlingGameId(),
+                    competitionType: "Live"
+                },
+                callback: function (competitionGame) {
+                    if (competitionGame) {
+                        viewModel.liveCompetitionId(competitionGame.liveBowlingCompetitionGroup.liveBowlingCompetition.id);
+                        viewModel.waitingForLiveCompetitionApproval(true);
+                        viewModel.liveCompetitionRejected(false);
+
+                        inGameScreen.loadLiveCompetition(viewModel);
+                    }
+                },
+                height: "auto"
+            });
+        },
+
+        inGameScreen.createGameTap = function () {
+            var viewModel = ko.dataFor(this);
+            
+            if (scn.hasSession()) {
+                scn.popup.show("CreateGamePopup", {
+                    callback: scn.views.inGameScreen.createGamePopupCallback,
+                    viewModel: {
+                        bowlingGameId: viewModel.bowlingGameId(),
+                        competitionType: "Live"
+                    },
+                    height: 280
+                });
+            }
+        },
+
+        inGameScreen.createGamePopupCallback = function (competitionGame) {
+            if (competitionGame) {
+                var viewModel = ko.dataFor(jQuery("#in-game-screen-wrapper").get(0));
+                viewModel.liveCompetitionId(competitionGame.competition.id);
+                viewModel.isCompetitionCreator(true);
+                viewModel.liveCompetitionEntryFeeCredits(competitionGame.competition.entryFeeCredits);
+                //inGameScreen.loadChallengers(viewModel);
+            }
+        },
+
+        inGameScreen.getStandingPinArray = function (data) {
+            if (!data)
+                return 0;
+
+            var latestSquareNumber = data.latestSquareNumber();
+            return data['standingPins' + scn.padLeft(latestSquareNumber, 2)];
+        },
+
+        inGameScreen.startNewGame = function () {
+            var viewModel = ko.dataFor(this.element);
+
+            if (viewModel.loadingStartNewGame()) {
+                return;
+            }
+
+            scn.showLoading();
+
+            scn.ajax({
+                url: scn.apiAddress + "user/current",
+                type: "GET",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+                    var user = data == null ? 0 : data.id;
+
+                    if (user < 1) {
+                        scn.hideLoading();
+                        viewModel.loadingStartNewGame(false);
+                        alert("An error occurred.  Please try again.");
+                        return;
+                    }
+
+                    var model = {
+                        id: viewModel.laneCheckoutId(),
+                        user: { id: user }
+                    };
+
+                    scn.ajax({
+                        url: scn.apiAddress + "lanecheckout",
+                        type: "POST",
+                        data: model,
+                        dataType: "json",
+                        success: function (data) {
+                            scn.hideLoading();
+                            viewModel.loadingStartNewGame(false);
+                            scn.viewEngine.changeView("new-2-InGameScreen?laneCheckout=" + data.id + "&bowlingGame=" + data.bowlingGame.id + "&venue=" + data.venue.id + "&venueName=" + data.venue.name);
+                        },
+                        error: function () {
+                            scn.hideLoading();
+                            viewModel.loadingStartNewGame(false);
+                            alert("It looks like we weren't able to start a new game! Please try again later.", { title: "Uh oh!" });
+                            scn.hideLoading();
+                        }
+                    });
+                },
+                error: function () {
+                    viewModel.loadingStartNewGame(false);
+                    scn.hideLoading();
+                    alert("An error occurred.  Please try again.");
+                }
+            });
+        },
+
+        inGameScreen.showAvailableChallengePopup = function () {
+            var viewModel = ko.dataFor(this.element);
+
+            var containerElm = jQuery(this.element).parents("#in-game-screen-wrapper");
+            showAvailableChallengePopup(viewModel, containerElm);
+        },
+
+        inGameScreen.showGameSummaryPopup = function () {
+            var viewModel = ko.dataFor(this.element);
+
+            scn.popup.show("GameSummary", {
+                viewModel: {
+                    bowlingGameId: viewModel.bowlingGameId(),
+                    inGameScreenViewModel: viewModel
+                }
+            });
+        },
+
+        showAvailableChallengePopup = function (viewModel, containerElm, hideCloseButton, callback) {
+            scn.popup.show("EnterChallengePopup", {
+                viewModel: {
+                    bowlingGameId: viewModel.bowlingGameId(),
+                    inGameScreenViewModel: viewModel
+                },
+                callback: function () {
+                    inGameScreen.updateChallenge(viewModel, true, containerElm);
+
+                    if (callback && typeof (callback) === "function") {
+                        callback.call(null);
+                    }
+                },
+                hideCloseButton: hideCloseButton,
+                height: "auto"
+            });
+        },
+
+        _askedForLiveConfirmation = [],
+        inGameScreen.onAfterLiveChallengerAdd = function (elm, index, added) {
+            if (added.state() == "Pending") {
+                if (_askedForLiveConfirmation.indexOf(added.scoredGame.bowlingGameId()) == -1) {
+                    _askedForLiveConfirmation.push(added.scoredGame.bowlingGameId());
+
+                    var viewModel = ko.dataFor(jQuery(elm).parents("#tab-4-scroller").get(0));
+                    if (viewModel.isCompetitionCreator()) {
+                        confirm(added.screenName() + " would like to join your game.  Is that OK?", {
+                            title: "New Player",
+                            buttonLabels: "Yes,No",
+                            callback: function (r) {
+                                var state;
+                                if (r === NOTIFICATION_BUTTONS.OK) {
+                                    state = "Entered";
+                                } else {
+                                    state = "Rejected";
+                                }
+
+                                scn.showLoading();
+
+                                scn.ajax({
+                                    url: scn.apiAddress + "bowlingcompetition/live/" + viewModel.liveCompetitionId() + "/game/" + added.scoredGame.bowlingGameId() + "/state",
+                                    type: "POST",
+                                    data: { state: state },
+                                    success: function () {
+                                        scn.hideLoading();
+                                        added.state(state);
+                                    },
+                                    error: function () {
+                                        scn.hideLoading();
+                                        alert("An error occurred confirming that opponent.  Please try again later.");
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+            }
+        },
+
+        inGameScreen.getScoreDifferentialPosted = function (gameArray, game, elm, scoringMode) {
+            var highestGameScore;
+            elm = jQuery(elm);
+
+            var propName = scoringMode == "Handicap" ? "handicapScore" : "finalScore";
+
+            for (var i = 0; i < gameArray.length; i++) {
+                var gameScore = gameArray[i][propName]();
+                if (!highestGameScore) {
+                    highestGameScore = gameScore;
+                } else if (gameScore > highestGameScore) {
+                    highestGameScore = gameScore;
+                }
+            }
+
+            var value = game[propName]() - highestGameScore;
+            if (value > 0) {
+                value = "(+" + value + ")";
+                elm.css("color", "#06fa11");
+            } else if (value < 0) {
+                value = "(" + value + ")";
+                elm.css("color", "#FF0000");
+            } else {
+                value = "";
+                elm.css("color", "#ffffff");
+            }
+
+            return value;
+        },
+
+        inGameScreen.getScoreDifferentialLive = function (gameArray, game, elm, scoringMode) {
+            var highestGameScore;
+            elm = jQuery(elm);
+
+            var propName = scoringMode == "Handicap" ? "handicapScore" : "finalScore";
+
+            for (var i = 0; i < gameArray.length; i++) {
+                var gameScore = gameArray[i].scoredGame[propName]();
+                if (!highestGameScore) {
+                    highestGameScore = gameScore;
+                } else if (gameScore > highestGameScore) {
+                    highestGameScore = gameScore;
+                }
+            }
+
+            var value = game[propName]() - highestGameScore;
+            if (value > 0) {
+                value = "(+" + value + ")";
+                elm.css("color", "#06fa11");
+            } else if (value < 0) {
+                value = "(" + value + ")";
+                elm.css("color", "#be1616");
+            } else {
+                value = "";
+                elm.css("color", "#ffffff");
+            }
+
+            return value;
+        },
+
+        inGameScreen.postToTwitter = function () {
+            var viewModel = ko.dataFor(this);
+            if (viewModel.isGameOver()) {
+                scn.gameplay.postScoresToTwitter(viewModel.bowlingGameId());
+            }
+        },
+
+        inGameScreen.postToFacebook = function () {
+            var viewModel = ko.dataFor(this);
+            if (viewModel.isGameOver()) {
+                scn.gameplay.postScoresToFacebook(viewModel.bowlingGameId());
+            }
+        },
+
+        inGameScreen.vibCheck = function () {
+            var elm = jQuery(this.element);
+            var tab = elm.parents("#vib-tab:first");
+
+            var tabViewModel = ko.dataFor(tab.get(0));
+            var viewModel = ko.dataFor(elm.get(0));
+
+            if (!viewModel.selected()) {
+                tabViewModel.selectedVibList.push(viewModel);
+                viewModel.selected(true);
+            } else {
+                var selectedList = tabViewModel.selectedVibList();
+                for (var i = 0; i < selectedList.length; i++) {
+                    if (selectedList[i].id() == viewModel.id()) {
+                        selectedList[i].selected(false);
+                        tabViewModel.selectedVibList.remove(selectedList[i]);
+                    }
+                }
+            }
+            /*
+            if (elm.data("checked")) {
+                jQuery(".checkbox", elm).removeClass("hidden");
+                jQuery(".checkbox-checked", elm).addClass("hidden");
+                elm.data("checked", false);
+            } else {
+                jQuery(".checkbox", elm).addClass("hidden");
+                jQuery(".checkbox-checked", elm).removeClass("hidden");
+                elm.data("checked", true);
+            }
+            */
+        },
+
+        inGameScreen.showVibPlayerCardPopup = function () {
+            scn.popup.show("VibPlayerCardPopup", {
+                additionalClass: "red-popup",
+                closeButtonAdditionalClass: "close-btn-20-red",
+                viewModel: ko.dataFor(this.element)
+            });
+        },
+
+        inGameScreen.onVibTabShow = function () {
+            var elm = jQuery(this);
+            var viewModel = ko.dataFor(elm.get(0));
+
+            var scroll = jQuery("#vib-scroll");
+            var scrollDom = scroll.get(0);
+            if (!scrollDom.iScroll) {
+                var isc = new iScroll(scrollDom, {
+                    snap: false,
+                    momentum: false,
+                    hScroll: false,
+                    hScrollbar: false,
+                    vScroll: true,
+                    vScrollbar: false
+                });
+
+                scn.viewEngine.registerViewDestructor(function () {
+                    if (isc && isc.iScroll) {
+                        isc.iScroll.destroy();
+                    }
+                });
+            } else {
+                scrollDom.iScroll.refresh();
+            }
+
+            scn.ajax({
+                url: scn.apiAddress + "bowlinggame/" + viewModel.bowlingGameId() + "/vib/posted/available",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+                    ko.mapping.fromJS(data,
+                        {
+                            key: function (item) {
+                                return ko.utils.unwrapObservable(item.id);
+                            },
+                            create: function (toCreate) {
+                                var obs = ko.mapping.fromJS(toCreate.data);
+                                obs.selected = ko.observable(false);
+                                return obs;
+                            }
+                        },
+                        viewModel.vibList);
+
+                    viewModel.vibLoaded(true);
+
+                    if (scrollDom.iScroll) {
+                        scrollDom.iScroll.refresh();
+                    }
+                },
+                error: function (jqXhr, status) {
+
+                }
+            });
+        },
+
+        inGameScreen.loadVibScores = function (viewModel, firstLoad) {
+            if (!firstLoad && !viewModel.hasVib()) {
+                return;
+            }
+
+            var scroll = jQuery("#vib-score-scroll");
+            var scrollDom = scroll.get(0);
+            if (!scrollDom.iScroll) {
+                var isc = new iScroll(scrollDom, {
+                    snap: false,
+                    momentum: false,
+                    hScroll: false,
+                    hScrollbar: false,
+                    vScroll: true,
+                    vScrollbar: false
+                });
+
+                scn.viewEngine.registerViewDestructor(function () {
+                    if (isc && isc.iScroll) {
+                        isc.iScroll.destroy();
+                    }
+                });
+            }
+
+            scn.ajax({
+                url: scn.apiAddress + "vib/game/" + viewModel.bowlingGameId() + "/view",
+                method: "GET",
+                dataType: "json",
+                success: function (data) {
+                    if (data.length == 0) {
+                        viewModel.hasVib(false);
+                    } else {
+                        viewModel.hasVib(true);
+                    }
+
+                    ko.mapping.fromJS(data, {}, viewModel.vibChallengers);
+
+                    if (scrollDom.iScroll) {
+                        var innerScroll = scroll.children(":first");
+                        var newHeight = 100 * data.length;
+                        if (innerScroll.height() != newHeight) {
+                            innerScroll.height(newHeight);
+                            scrollDom.iScroll.refresh();
+                        }
+                    }
+                },
+                error: function (jqXhr, status) {
+                    viewModel.hasVib(false);
+                }
+            });
+        },
+
+        inGameScreen.enterVibCompetitions = function () {
+            var elm = jQuery(this);
+            var viewModel = ko.dataFor(elm.get(0));
+
+            var selectedVibIdList = [];
+            var selectedVibList = viewModel.selectedVibList();
+
+            if (selectedVibList.length == 0)
+                return;
+
+            for (var i = 0; i < selectedVibList.length; i++) {
+                selectedVibIdList[i] = selectedVibList[i].id();
+            }
+
+            scn.payment.purchase(
+                // format of VIB itunes/android item names: com.scn.tribaltech.xbowling.itemname_qtyX
+                selectedVibList[0].vibEntryPackage.name() + "_qty" + selectedVibIdList.length,
+                function (purchaseData) {
+                    var postData;
+                    var postUrl;
+
+                    var data = {
+                        bowlingGameId: viewModel.bowlingGameId,
+                        vibPostedBowlingCompetitionIds: selectedVibIdList,
+                        purchaseData: postData
+                    };
+
+                    if (purchaseData.type === scn.payment.PAYMENT_TYPE.IOS) {
+                        if (!purchaseData.transactionIdentifier || !purchaseData.transactionReceipt || !purchaseData.productId) {
+                            alert("There was an error connecting to the store.  Please try again later.");
+                            return;
+                        }
+
+                        postUrl = "itunes";
+                        data.productId = purchaseData.productId;
+                        data.transactionId = purchaseData.transactionIdentifier;
+                        data.receiptId = purchaseData.transactionReceipt;
+
+                    } else if (purchaseData.type === scn.payment.PAYMENT_TYPE.ANDROID) {
+                        if (!purchaseData.productId || !purchaseData.signedData || !purchaseData.signature) {
+                            alert("There was an error connecting to the store.  Please try again later.");
+                            return;
+                        }
+
+                        postUrl = "android";
+                        data.productId = purchaseData.productId;
+                        data.signedData = purchaseData.signedData;
+                        data.signature = purchaseData.signature;
+                    } else {
+                        alert("We are very sorry, but an error occurred getting your purchase information.  Please contact XBowling support (support@xbowling.com)", { title: "Uh oh!" });
+                        return;
+                    }
+
+                    data.vibEntryPackageId = selectedVibList[0].vibEntryPackage.id();
+
+                    scn.ajax({
+                        url: scn.apiAddress + "vib/enter/" + postUrl,
+                        type: "POST",
+                        data: data,
+                        success: function (data) {
+                            viewModel.hasVib(true);
+
+                            // load it
+                            inGameScreen.loadVibScores(viewModel, false);
+                        },
+                        error: function (jqXhr, status) {
+                            alert("An error occurred entering the VIB contest. Please contact support@xbowling.com.", { title: "Uh oh!" });
+                        }
+                    });
+                },
+                function () {
+                    alert("An error occurred entering the VIB contest. Please contact support@xbowling.com.", { title: "Uh oh!" });
+                });
+        }
+    }(window.scn.views.inGameScreen = window.scn.views.inGameScreen || {}));
+
+
+</script> 

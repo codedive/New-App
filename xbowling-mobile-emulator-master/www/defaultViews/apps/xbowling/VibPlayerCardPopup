@@ -1,0 +1,97 @@
+<script type="text/javascript">
+    (function (vibPlayerCardPopup) {
+        vibPlayerCardPopup.load = function () {
+            var elm = jQuery(this);
+
+            var viewModel = scn.popup.getViewModel(elm);
+            ko.applyBindings(viewModel, elm.get(0));
+        }
+    }(window.scn.views.vibPlayerCardPopup = window.scn.views.vibPlayerCardPopup || {}));
+</script>
+<style type="text/css">
+    .vib-player-card-title {
+        float: right;
+        text-transform: uppercase;
+        margin-top: 25px;
+        margin-right: 50px;
+    }
+
+    .vib-player-card-title h2 {
+        font-weight: bold;
+        font-size: 24px;
+        margin: 0;
+    }
+
+    .vib-player-card-title h3 {
+        font-size: 18px;
+        margin: 0;
+        font-weight: normal;
+    }
+
+    .vib-player-card-info {
+        clear: both;
+        background-color: #000000;
+        border: 1px solid #FFFFFF;
+        border-radius: 5px 5px;
+        width: 250px;
+        float: right;
+        margin-right: 25px;
+        padding: 10px;
+    }
+
+    .vib-player-card-info h3 {
+        margin: 0;
+        text-transform: uppercase;
+    }
+
+    .vib-player-card-info > div {
+        font-weight: bold;
+    }
+
+    .vib-player-card-info > div > span {
+        font-weight: normal;
+        margin-left: 5px;
+    }
+
+    .vib-player-card-description {
+        clear: both;
+        width: 250px;
+        float: right;
+        margin-right: 25px;
+        padding: 10px;
+    }
+
+    .vib-player-card-picture {
+        position: absolute;
+        width: 125px;
+        border: 2px solid #FFFFFF;
+        border-radius: 5px 5px;
+        margin-top: 15%;
+        margin-left: 10px;
+    }
+</style>
+<div id="popup" data-load="scn.views.vibPlayerCardPopup.load" style="height: 100%" class="honeycomb-background">
+    <div class="popup-header red-popup-header">
+        <div class="centered-container">
+            <span>VIB</span>
+        </div>
+    </div>
+    <div class="vib-player-card-picture">
+        <img data-bind="attr: { src: pictureFile.fileUrl }" width="75" style="float: right; top: -15px;" />
+    </div>
+    <div id="vib-player-card">
+        <div class="vib-player-card-title light-text">
+            <h2 data-bind="text: name"></h2>
+            <h3 data-bind="text: title"></h3>
+        </div>
+        <div class="vib-player-card-info light-text">
+            <h3>Vitals</h3>
+            <span data-bind="text: name"></span>
+            <div>Height <span data-bind="text: (heightInches() / 12) + '\'' + (heightInches() % 12)"></span></div>
+            <div>Weight <span data-bind="text: weightPounds() + ' pounds'"></span></div>
+            <div>Position <span data-bind="text: title"></span></div>
+        </div>
+        <div class="vib-player-card-description">
+        </div>
+    </div>
+</div>

@@ -1,0 +1,30 @@
+<link rel="stylesheet" data-href="Fonts.css" />
+<link rel="stylesheet" data-href="Site.css" />
+<script type="text/javascript" data-src="knockout-2.2.1.js"></script>
+<script type="text/javascript" data-src="knockout.mapping-latest.js"></script>
+<script type="text/javascript" data-src="lightningtouch.js"></script>
+<script type="text/javascript" data-src="spin.min.js"></script>
+<script type="text/javascript" data-src="moment.js"></script>
+<script type="text/javascript" data-src="iscroll.js"></script>
+<script type="text/javascript" data-src="modernizr-2.6.2.js"></script>
+<script type="text/javascript" data-src="jquery.ui.touch-punch.js"></script>
+<script type="text/javascript" data-src="jquery.drag-menu.js"></script>
+<script type="text/javascript" data-src="scn.js"></script>
+<script type="text/javascript" data-src="scn.viewengine.js"></script>
+<script type="text/javascript" data-src="scn.gameplay.js"></script>
+<script type="text/javascript" data-src="scn.apprepository.js"></script>
+<script type="text/javascript" data-src="scn.koextensions.js"></script>
+<script type="text/javascript" data-src="scn.sound.js"></script>
+<script type="text/javascript" data-src="scn.video.js"></script>
+<script type="text/javascript" data-src="scn.payment.js"></script>
+<script type="text/javascript" data-src="scn.popup.js"></script>
+<script type="text/javascript" data-src="scn.confetti.js"></script>
+<script type="text/javascript" data-src="scn.legal.js"></script>
+<script type="text/javascript" data-src="twitter.js"></script>
+<script type="text/javascript" data-src="GALocalStorage.min.js"></script>
+
+<div id="layoutWrapper">
+    <div id="slideWrapper">
+        <div id="wrapper"></div>
+    </div>
+</div>

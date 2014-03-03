@@ -1,0 +1,107 @@
+<div id="strikes-for-a-cause-popup" data-load="scn.views.strikesForACausePopup.load">
+    <div class="popup-header"><div class="centered-container">
+        <span id="popup-title">Strikes For A Cause</span></div>
+    </div>
+    <div id="strikes-for-a-cause-popup-scroll" style="height:210px; width:350px; margin:auto;">
+    <div style="margin: auto; float: none; margin-top: 50px;">
+
+        <div style="margin-bottom: 25px;">
+            <a data-tap="scn.views.strikesForACausePopup.enterTap" data-tap-alloweventbubble="true">
+                <div class="tiles green-tile" style="margin: auto;width: 85px; height: 76px; float: none;">
+                    <div class="tile-icon-container"><div class="tile-icon"><img src="icon-xbowling.png" /></div></div>
+                    <div class="tile-title" style="margin-top: 2px; margin-left: 15px;">Enter</div>
+                </div>
+            </a>
+        </div>
+
+       <!--
+        <div style="float: right;">
+            <a data-tap="scn.views.strikesForACausePopup.leaderboardTap" data-tap-alloweventbubble="true">
+                <div class="tiles blue-tile" style="width: 85px; height: 76px">
+                    <div class="tile-icon-container"><div class="tile-icon"><img src="icon-xbowling.png" /></div></div>
+                    <div class="tile-title" style="margin-top: -8px;">Leaderboard</div>
+                </div>
+            </a>
+        </div>
+        -->
+
+        <div class="light-text" data-bind="visible: gamePacksRemaining() == 0">
+            <p>
+Bowling during the Holiday Season is more fun when you Bowl for Good!  Join XBowling's Strikes for a Cause Challenge to win an opportunity to be one of the top 20 XBowlers to win an opportunity to bowl with celebrities at the Strikes for a Cause celebrity bowling tournament in Atlanta, GA on January 16, 2014 to benefit troubled youth. 
+            </p>
+            <p>
+The top 20 XBowlers with the highest cumulative, handicapped score win!  You can bowl as many games as you like at any bowling center in the world during the Challenge period.   The more games you bowl, the better your chances to be one of our winners and join in the fun on January 16!
+            </p>
+        </div>
+
+
+        <div class="light-text" data-bind="visible: gamePacksRemaining() > 0">
+            The final score of your next
+            <span data-bind="if: gamePacksRemaining() > 1, text: gamePacksRemaining()"></span> 
+            <span data-bind="if: gamePacksRemaining() == 1">game</span>
+            <span data-bind="if: gamePacksRemaining() > 1">games</span>
+            will increase your leaderboard status!
+            <br />
+            <br />
+        </div>
+
+
+    </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    (function (strikesForACausePopup) {
+        strikesForACausePopup.viewModel = function () {
+            this.gamePacksRemaining = ko.observable({});
+        },
+
+        strikesForACausePopup.enterTap = function () {
+            scn.popup.show('StrikesForACausePurchasePopup');
+        },
+
+        strikesForACausePopup.leaderboardTap = function () {
+            scn.popup.show('StrikesForACauseLeaderboardPopup');
+        },
+
+        strikesForACausePopup.load = function () {
+            var scrollElm = jQuery("#strikes-for-a-cause-popup-scroll", this);
+            var iscr = new iScroll(scrollElm.get(0), {
+                    snap: false,
+                    momentum: true,
+                    hScroll: false,
+                    hScrollbar: false,
+                    vScroll: true,
+                    vScrollbar: true
+                });
+            scn.popup.registerPopupDestructor(scrollElm, function () {
+                if (iscr) {
+                    iscr.destroy();
+                    iscr = null;
+                }
+            });
+            debugger;
+            scn.showLoading();
+
+            var viewModel = new strikesForACausePopup.viewModel();
+            ko.applyBindings(viewModel, this.get(0));
+
+            scn.ajax({
+                url: scn.apiAddress + "cumulativescoregamepackentry/gamesremaining",
+                type: "GET",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+
+                    scn.hideLoading();
+                    viewModel.gamePacksRemaining(data);
+                },
+                error: function (jqXhr, status) {
+                    scn.hideLoading();
+                    alert("An error occurred retrieving entry status from the server.  Please try again.");
+                }
+            });
+        }
+
+    }(window.scn.views.strikesForACausePopup = window.scn.views.strikesForACausePopup || {}));
+</script>

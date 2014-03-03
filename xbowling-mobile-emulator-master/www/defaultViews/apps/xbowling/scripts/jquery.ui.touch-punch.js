@@ -1,0 +1,1 @@
+// removed file 10/31/2013 since we no longer have jq mobile

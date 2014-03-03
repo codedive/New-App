@@ -1,0 +1,54 @@
+<script type="text/javascript">
+    (function (manualGameCompletePopup) {
+        gameCompleteViewModel = function (game) {
+            this.game = ko.observable(game);
+        },
+
+        manualGameCompletePopup.load = function () {
+            var game = scn.popup.getViewModel(this);
+
+            var vm = new gameCompleteViewModel(game);
+            ko.applyBindings(vm, this.get(0));
+
+            var confetti = scn.confetti.render(jQuery(".popup-challenge-info", this));
+            setTimeout(function () {
+                scn.confetti.stop(confetti);
+            }, 3500);
+        },
+
+        manualGameCompletePopup.close = function () {
+            scn.popup.hide(this);
+        },
+
+        manualGameCompletePopup.featureGame = function () {
+            var viewModel = ko.dataFor(this);
+
+            scn.popup.show("CreateGamePopup", {
+                viewModel: {
+                    bowlingGameId: viewModel.game().bowlingGameId(),
+                    competitionType: "Posted"
+                }
+            });
+
+            scn.popup.hide(this);
+        }
+    }(window.scn.views.manualGameCompletePopup = window.scn.views.manualGameCompletePopup || {}));
+
+</script>
+<div id="popup" class="light-text" data-load="scn.views.manualGameCompletePopup.load">
+    <div class="popup-challenge-info">
+        <div class="icon icon-challace" style="margin-top: 25px; width: 80px; height: 100px; background-size: contain; background-repeat: no-repeat; float: left;"></div>
+        <div style="float: left; width: 80%" data-bind="with: game">
+            <h1>Congratulations! <br />You scored a <span data-bind="text: finalScore" />!</h1>
+            <p>
+                You can post your game so other XBowlers can challenge you.  When another XBowler challenges your game, you win <strong>250 points</strong> if you win or <strong>100 points</strong> if you lose!
+            </p>
+        </div>
+        <br class="clear" />
+    </div>
+
+    <div class="button-container" style="float: right;">
+        <div class="fadeIn in-game-button red-general-button" data-tap="scn.views.manualGameCompletePopup.close"><span>Not this time</span></div>
+        <div class="fadeIn in-game-button green-general-button" data-tap="scn.views.manualGameCompletePopup.featureGame"><span>Post My Game!</span></div>
+    </div>
+</div>

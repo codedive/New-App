@@ -1,0 +1,326 @@
+<script type="text/javascript">
+    (function (faqCategoryPopup) {
+        categoryiscr = null,
+        faqCategoryPopup.load = function () {
+            var scroll = jQuery("#faq-category-popup-scroll");
+            scroll.removeClass("hidden");
+            scroll.height(210);
+
+            jQuery("#faq-answers").addClass("hidden");
+
+            if (!categoryiscr) {
+                categoryiscr = new iScroll(scroll.get(0), {
+                    snap: false,
+                    momentum: true,
+                    hScroll: false,
+                    hScrollbar: false,
+                    vScroll: true,
+                    vScrollbar: false
+                });
+            }
+
+            categoryiscr.refresh();
+
+            scn.popup.registerPopupDestructor(scroll, function () {
+                if (categoryiscr) {
+                    categoryiscr.destroy();
+                    categoryiscr = null;
+                }
+            });
+        },
+
+        wordCount = function (text) {
+            var stripped = text.replace(/\s/g,' ');
+            stripped = stripped.split(' ');
+            return stripped.length;
+        } 
+
+        iscr = null,
+        faqCategoryPopup.showContent = function () {
+            var elm = jQuery(this);
+
+            var content = jQuery("#faq-answers-" + elm.attr("data-faqId"));
+            var question = jQuery("#faq-question");
+            question.text(elm.text());
+
+            var categoryScroll = jQuery("#faq-category-popup-scroll");
+            categoryScroll.addClass("hidden");
+            var answers = jQuery("#faq-answers");
+            answers.height(210);
+
+            jQuery("#faq-answers-container > div").addClass("hidden");
+
+            answers.removeClass("hidden");
+            content.removeClass("hidden");
+
+            if (!iscr) {
+                iscr = new iScroll(answers.get(0), {
+                    snap: false,
+                    momentum: true,
+                    hScroll: false,
+                    hScrollbar: false,
+                    vScroll: true,
+                    vScrollbar: false
+                });
+            }
+
+            iscr.refresh();
+
+            scn.popup.registerPopupDestructor(elm, function () {
+                if (iscr) {
+                    iscr.destroy();
+                    iscr = null;
+                }
+            });
+        },
+
+        faqCategoryPopup.back = function () {
+            if (iscr) {
+                iscr.destroy();
+                iscr = null;
+            }
+
+            faqCategoryPopup.load();
+        },
+
+        faqCategoryPopup.showTutorial = function () {
+            var tutWindow = window.open("http://tutorial.xbowling.com?width=" + scn.viewEngine.windowWidth, "_blank", "location=no");
+            scn.injectWindowLoadingMessage(tutWindow, "Please wait...", "Loading");
+            tutWindow.addEventListener("loadstart", function (e) {
+                if (e.url.indexOf("#close") > -1) {
+                    tutWindow.close();
+                }
+            }, false);
+        },
+
+        faqCategoryPopup.showChallengeRules = function () {
+            window.open(scn.legal.challengeRulesUrl, "_blank", "location=no");
+        },
+
+        faqCategoryPopup.showVenueList = function () {
+            window.open("http://www.xbowling.com/dynamic/index.php/xbowling/realtime_scores", "_blank", "location=no");
+        },
+
+        faqCategoryPopup.showPrivacyPolicy = function () {
+            window.open(scn.legal.privacyPolicyUrl, "_blank", "location=no");
+        }
+    }(window.scn.views.faqCategoryPopup = window.scn.views.faqCategoryPopup || {}));
+</script>
+<div id="popup">
+    <div id="popup-bg"></div>
+    <div class="popup-header"><div class="centered-container">
+        <span>Help</span></div>
+    </div>
+    <div id="faq-category-popup-scroll" data-load="scn.views.faqCategoryPopup.load" class="popup-content" style="height: 210px">
+        <div style="padding-bottom: 30px;">
+            <ul class="list-view" id="faq-1-categories">
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showTutorial">Tutorial</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showChallengeRules">XBowling Challenge Rules</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="3">My Bowling Center Does Not Support XBowling</a>
+                </li>
+            </ul>
+            <ul class="list-view" id="faq-2-categories" style="margin-top: 10px;">
+                <li class="divider">FAQs</li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="24">How will my credits be transferred from the old version of the App to the new one?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="4">How does the XBowling technology work?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="5">How do I win prizes by entering Challenges?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="6">How do all of the different Points work in XBowling?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="7">What is the minimum number of SCN Reward Points I need to get in order to redeem for prizes?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="8">Are there any restrictions on XBowlers' ability to redeem and receive prizes?</a>
+                </li>
+                 <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="9">When can I start competing against celebrities and professional bowlers?</a>
+                </li>
+                 <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="10">How many Challenges can I enter at the same time?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="11">How do I post my completed game with XBowling for others to challenge?  Does it cost anything?</a>
+                </li>
+                 <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="12">How many posted games can I enter at once?</a>
+                </li>
+                 <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="13">I would like to compete with my team against another team. I could not figure out how to do that in XBowling.  Please help!</a>
+                </li>
+                 <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="14">How does a bowling handicap work?</a>
+                </li>
+                 <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="15">Can I choose to play H2H Challenges (games against live opponents or previously completed games) without using handicapped scores?</a>
+                </li>
+                 <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="16">How many players can I follow at the same time in Live Scores Section of the App?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="17">Will I be able to enter Challenges for a cash prize in the future?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="18">What do you do with my personal information?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="19">What do I do if the App freezes or crashes?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="20">I have some suggestions on how you can improve XBowling and offer me more opportunities to play and win.  How can I discuss these with you?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="21">I have a problem from time to time with navigating your App.  I seem to be having some technical difficulty also.  How do I share these issues with you?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="22">How will my Points and leaderboard standings transfer from the old version of the App to the new one?</a>
+                </li>
+                <li>
+                    <a data-tap-alloweventbubble="true" data-tap="scn.views.faqCategoryPopup.showContent" data-faqId="23">What should I do if my phone's battery is losing power while I am XBowling?</a>
+                </li>
+            </ul>
+        </div>
+        
+    </div>
+    <div id="faq-answers" class="hidden light-text" style="margin-top: 25px">
+        <div id="faq-answers-inner-scroll" class="hundred-percent-width" style="clear: both;">
+            <div class="header" style="width: 50px; margin-top: -10px;">
+                <div class="header-left"> 
+                    <div class="header-button orange-button" data-tap="scn.views.faqCategoryPopup.back"><p>Back</p></div>
+                </div>
+            </div>
+            <div id="faq-question" class="hundred-percent-width centered" style="clear: both; padding-top: 15px; font-weight: bold;"></div>
+            <div id="faq-answers-container">
+                <div id="faq-answers-24" class="hidden">
+                    <p>Two types of credits existed in the old version of XBowling - credits purchased within the App and promotional credits issued to players to promote additional play and evaluation of the Beta platform.  Purchased credits will be transferred to the new App at a conversion rate of 10 old credits to 1 new credit to ensure parity in the value of credits for existing XBowlers and new XBowlers.  Promotional credits will not be converted to new credits and will not be transferred to the new App.</p>
+                    <p>Upon updating to the new App, each player will receive new promotional credits for exploring the new App and trying the new Challenges.  Each new XBowler will receive the same number of promotional credits upon registration.  SCN may award a higher number of promotional credits at its discretion to players with top leaderboard status in the old App.</p>
+                    <p>In the event of any errors in transferring of the old (purchased) credits to the new App, the Company will promptly correct such errors by adjusting the relevant player's credit balance.  In the event a player has entered Challenges with such erroneously issued credits and has earned SCN Reward Points in such Challenges, the player will be allowed to keep such Points in their account.</p>
+                </div>
+                <div id="faq-answers-3" class="hidden">
+                    <p>Click <a class="link" data-tap="scn.views.faqCategoryPopup.showVenueList">here</a> for a list of all bowling centers that are XBowling-enabled.  We are working hard to get more centers signed up as quickly as possible!  If your center does not support XBowling, please contact them and tell them "I want my XBowling."</p>
+                    <p>Until your center becomes XBowling-enabled, you can manually enter each throw in the app and enjoy the thrill of XBowling at any location!  Simply select the center from the list after tapping the XBowl now button.  If you do not see a center listed on the app, please click on "Feedback" in the Settings tab, or email us at support@xbowling.com and let us know the name and location of the center!</p>
+                </div>
+                <div id="faq-answers-4" class="hidden">
+                    <p>We have integrated our software with the scoring systems of many bowling centers in the US and around the world to allow our system to keep track of every ball throw and game at every XBowling-enabled center.   Such integration involves the placement of some XBowling equipment directly in bowling centers.</p>
+                    <p>As of October 2013, we have captured nearly 1 billion ball throws around the world!  Such integrations continue every month, as more and more centers learn about this new technology and become XBowling-enabled.</p>
+                    <p>This ball throw and game information that we track is stored by us in the cloud (secure data center managed by companies such as Microsoft and Amazon), and we provide access to it in real time via the wireless internet to XBowlers on their smartphone or tablet devices.</p>
+                    <p>By providing this data for live games or games previously bowled, we enable XBowlers to bowl against a single or multiple opponents regardless of where they are physically located and when they are actually bowling!   For example, if you bowl and post your completed game, your friend (or complete stranger) can find your game in our App and play against that game - and as they bowl each frame, your score will be revealed to them also frame by frame - so they get a sense of a live game!</p>
+                    <p>By logging on to our website at www.xbowling.com, anyone can also see all XBowling-enabled centers in the world, find a player they want to follow (XBowler or not), and see the scores of their most recently completed game or follow along frame by frame as they bowl.  This Live Score functionality is also available within our App in the Live Scores Tile.</p>
+                </div>
+                <div id="faq-answers-5" class="hidden">
+                    <p>While bowling, use your credits to enter Challenges.  When you win Challenges, you win Points, which also turn into SCN Reward Points at a 1:1 ratio.  SCN Reward Points are then redeemed for prizes in our SCN Rewards Store.</p>
+                    <p>Redeeming prizes is simple.  Select the prizes you would like to receive, enter your address, and for no additional charge we will ship directly to your location.</p>
+                    <p><u>For iOS:</u> You can get to our SCN Rewards Store by clicking "Get Prizes" button on our Home Screen or Main Game Screen.</p>
+                    <p><u>For Android:</u> As of this time, Android does not offer guidance as to whether XBowling complies with its policies on skill-based games.  Until such time that Google establishes or clarifies such policies,  we are not able to offer in app redemption of prizes.  As such, to redeem prizes, you can get to the SCN Rewards Store online at: www.xbowling.com.</p>
+                </div>
+                <div id="faq-answers-6" class="hidden">
+                    <p>XBowling awards and displays 3 types of points:</p>
+                    <p>Game Points: The number of points won in each frame (in case of XBowl Mania Challenge) or upon completing a game and winning a Challenge.</p>
+                    <p>All Time Points: The cumulative number of points ever earned by an XBowler with our App.  This number increases as the Game Point meter increments.  This number is the one used to determine standings on leaderboards that measure points.</p>
+                    <p>SCN Reward Point:  Upon the issuance of All Time Points, such points equal 1:1 to the number of SCN Reward Points awarded to the user.  Upon the use of these points to redeem for prizes, the total number decreases by the number of points used in a particular redemption transaction.  The decrease in SCN Reward Points does not cause any corresponding decrease to All Time Points so that the process of redemption for prizes does not adversely affect XBowlers' point leaderboard standing.</p>
+                </div>
+                <div id="faq-answers-7" class="hidden">
+                    <p>Based on the merchandise currently available in the SCN Rewards Store, a minimum of 26,000 points is required to start redeeming.  The more points you win, the greater your choice of prizes!</p>
+                    <p>International Markets:  We currently offer our prize redemption capability only in the United States.  An expanded international redemption program is coming soon, subject to regulatory and logistics review!  Keep earning your SCN Reward Points!</p>
+                    <p>United States:  Due to some restrictions in state law in certain jurisdictions, XBowlers in those jurisdictions are restricted in some functionality relating to entry into Challenges and redemption of prizes.  If any of these restrictions apply in your state, you will be notified by us directly as you go through your experience within the App or Web Site.</p>
+                </div>
+                <div id="faq-answers-8" class="hidden">
+                    <p>International Markets:  We currently offer our prize redemption capability only in the United States.  An expanded international redemption program is coming soon, subject to regulatory and logistics review!  Keep earning your SCN Reward Points!</p>
+                    <p>United States:  Due to some restrictions in state law in certain jurisdictions, XBowlers in those jurisdictions are restricted in some functionality relating to entry into Challenges and redemption of prizes.  If any of these restrictions apply in your state, you will be notified by us directly as you go through your experience within the App or Web Site.</p>
+                </div>
+                <div id="faq-answers-9" class="hidden">
+                    <p>Not soon enough!  We are working with a number of celebs who absolutely love bowling and can't wait to join the XBowling VIB platform.  Stay tuned for VIB announcements!</p>
+                </div>
+                <div id="faq-answers-10" class="hidden">
+                    <p>For each game that you bowl, you are allowed to enter any 1 or more of the 4 game challenges, 1 Head to Head Live Challenge, and  an unlimited number of Head to Head Posted Challenges (subject to availability of posted games on our network).</p>
+                </div>
+                <div id="faq-answers-11" class="hidden">
+                    <p>At the end of each game of XBowling, you are offered the opportunity to post your game for others to challenge.  Each game is free to post and will remain active for 7 days.  You will be notified (via email or push notification) each time another XBowler challenges your game and can follow that game live in the "My Opponents" section of the App.  Each time your game is chosen by a Challenger, you win points - 100 if you lose, 250 if you win!</p>
+                </div>
+                <div id="faq-answers-12" class="hidden">
+                    <p>There is no limit to the number of Head to Head Posted Challenges you can enter.</p>
+                </div>
+                <div id="faq-answers-13" class="hidden">
+                    <p>At this time, XBowling does not support team competition.  We are working on providing you and your friends with this functionality and look forward to hosting such team competitions in the future!</p>
+                </div>
+                <div id="faq-answers-14" class="hidden">
+                    <p>XBowling uses the handicap system to determine winners of Head to Head Challenges in line with the rules of the USBC, the official governing body of the sport of bowling in the US.   Each player's handicap is determined by the following formula:  (210 - Player's Average) X 90%.  If the organizer/host of a Live Head to Head Challenge wants to set up a game to be scored without handicaps, called "Scratch" game.</p>
+                    <p>With XBowling, we use the player's XBowling Average to determine the handicap and a person's average is determined after first 3 XBowled games.  Until a new XBowler plays 3 games, his average is not established and his handicap is shown as zero.</p>
+                    <p>For scoring a bowling game between players with different averages/handicaps, one would add each person's handicap to their score (called "gross" or "raw" score) to get their handicapped scores - the highest handicapped score wins.</p>
+                    <p>Please see example below:</p>
+                    <table class="handicap-table" cellspacing="0">
+                        <tr>
+                            <th style="width: 20%">Player</th>
+                            <th>Average</th>
+                            <th>Handicap</th>
+                            <th>Raw Score</th>
+                            <th>Handicap Score</th>
+                        </tr>
+                        <tr>
+                            <td>XBowler 1</td>
+                            <td>180</td>
+                            <td>27</td>
+                            <td>175</td>
+                            <td>202</td>
+                            <td style="color: red; font-weight: bold;">Loser</td>
+                        </tr>
+                        <tr>
+                            <td>XBowler 2</td>
+                            <td>130</td>
+                            <td>72</td>
+                            <td>132</td>
+                            <td>204</td>
+                            <td style="color: green; font-weight: bold;">Winner</td>
+                        </tr>
+                    </table>
+                    <br />
+                    <div>
+                        Basis Score: 210<br />
+                        % of Basis Score: 90%
+                    </div>
+                </div>
+                <div id="faq-answers-15" class="hidden">
+                    <p>You can play without using handicapped scoring in the Live Games if you are the Organizer by selecting "Scratch" in the Scoring Mode drop down in the Live Game set up screen or if you join a "Scratch" game set up by another Live Game Organizer.</p>
+                    <p>However, you cannot choose to play any Head to Head Posted games in Scratch Mode.</p>
+                </div>
+                <div id="faq-answers-16" class="hidden">
+                    <p>You can follow up to 5 players at one time.  Players do not have to be XBowlers to have their score be visible to you on the XBowling platform. </p>
+                </div>
+                <div id="faq-answers-17" class="hidden">
+                    <p>Yes, starting in 2014, XBowling is planning to offer cash based challenges to players in jurisdictions where awarding such prizes is allowed by law.   We will notify our customers when we are ready to launch this service.</p>
+                </div>
+                <div id="faq-answers-18" class="hidden">
+                    <p>Personal information is collected only for the purpose of shipping prizes redeemed in the SCN Rewards Store.  We may collect additional personal information as well as ask you to voluntarily provide more information to enhance our ability to provide you with better and more personalized service.  Please view our Privacy Policy <a class="link" data-tap="scn.views.faqCategoryPopup.showPrivacyPolicy">here</a> for more information.</p>
+                </div>
+                <div id="faq-answers-19" class="hidden">
+                    <p>If the XBowling App stops working properly, exit the App and restart by force-closing.  See instructions for your handheld device and operating system for force-closing apps if necessary.  </p>
+                    <p>Don't worry, your current game progress and Challenges will be saved and you will be able to continue with your game after the restart.</p>
+                </div>
+                <div id="faq-answers-20" class="hidden">
+                    <p>We would love to hear from you!  For suggestions about improving XBowling, please click on the "Feedback" tab in "Settings" contact: feedback@xbowling.com.</p>
+                </div>
+                <div id="faq-answers-21" class="hidden">
+                    <p>To report any problems or share conerns, you can click on the "Support" tab in "Settings" or email us: support@xbowling.com.</p>
+                </div>
+                <div id="faq-answers-22" class="hidden">
+                    <p>For the updated version of XBowling, we will be converting the points accumulated in the old app ("old points") to new points to ensure that the value of the new points in the SCN Reward Store is identical for customers who accumulated old points in the old app and new XBowlers using the current version of XBowling.  The conversion factor is 100 - each 100 old points will be converted to 1 new point.  </p>
+                    <p>Each new point is counted as part of All Time Points, which is a cumulative number for all points cored by an XBowler in our App.  This number is used for calculating point leaderboard status.  In addition, the number of All Time Points will equal the number of of SCN Reward Points used for redemption for prizes in the SCN Reward Store.  As you redeem SCN Reward Points, your total SCN Reward Points go down by the amount redeemed.  However, redemption does not affect the number of All Time Points, so redemptions for prizes do not affect your leaderboard standings!</p>
+                </div>
+                <div id="faq-answers-23" class="hidden">
+                    <p>You can lock your phone or turn off the screen while you are bowling.  Don't worry!  All your scores and challenge results are safe in the XBowling cloud and will update automatically when you unlock your phone!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

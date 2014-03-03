@@ -1,0 +1,127 @@
+<script type="text/javascript">
+    (function (turkeyChallengeSubmitPopup) {
+        _processing = false,
+
+        turkeyChallengeSubmitPopup.submitUrl = function () {
+            var popup = jQuery(this).parents("#popup");
+
+            var button = jQuery("#submit-button:first", popup);
+            if (button.data("in-confirm") === "true") {
+                turkeyChallengeSubmitPopup.doSubmit(popup);
+            } else {
+                turkeyChallengeSubmitPopup.doConfirm(popup);
+            }
+        },
+
+        turkeyChallengeSubmitPopup.doConfirm = function (popup) {
+            var url = jQuery("#turkey-challenge-submit-popup-url", popup);
+
+            if (url.val() == "") {
+                alert("Please enter a valid YouTube URL for your video!", { title: "Oops!" });
+                return;
+            }
+
+            var submitText = jQuery("#submit-button-text", popup);
+            submitText.text("CONFIRM");
+            submitText.removeClass("two-line-text");
+            var button = submitText.parents("#submit-button:first");
+            button.removeClass("tan-general-button").addClass("green-general-button");
+            button.data("in-confirm", "true");
+        },
+
+        turkeyChallengeSubmitPopup.doSubmit = function (popup) {
+            if (_processing)
+                return;
+
+            var url = jQuery("#turkey-challenge-submit-popup-url", popup);
+
+            if (url.val() == "") {
+                alert("Please enter a valid YouTube URL for your video!", { title: "Oops!" });
+                return;
+            }
+
+            scn.showLoading();
+
+            _processing = true;
+
+            var submitText = jQuery("#submit-button-text", popup);
+            submitText.text("PENDING");
+
+            scn.ajax({
+                url: scn.apiAddress + "videochallenge",
+                type: "POST",
+                data: {
+                    videoUrl: url.val()
+                },
+                success: function (data) {
+                    scn.hideLoading();
+                    alert("Your video was submitted! Be sure to vote on the XBowling Facebook page!", { title: "Good Luck!" });
+                    scn.views.footer.increaseCredits(-20);
+                    scn.popup.hide(popup);
+                    _processing = false;
+                },
+                error: function (jqXhr, txtStatus) {
+                    scn.hideLoading();
+                    submitText.text("CONFIRM");
+                    _processing = false;
+
+                    if (jqXhr.status == 402) {
+                        // payment required...not enough credits
+                        confirm("You do not have enough credits to enter.  Would you like to purchase more credits now?", {
+                            title: "Uh oh!",
+                            callback: function (r) {
+                                if (r === NOTIFICATION_BUTTONS.OK) {
+                                    scn.popup.show("BuyMoreCredits", {
+                                        callback: function (callbackViewModel) {
+                                            if (callbackViewModel && callbackViewModel.purchaseMade) {
+                                                // try again
+                                                turkeyChallengeSubmitPopup.doSubmit(popup);
+                                            }
+                                        },
+                                        height: 275
+                                    });
+                                }
+                            }
+                        });
+                    } else {
+                        alert("Something went wrong entering you into the challenge.  Please try again later.", { title: "Uh oh!" });
+                    }
+                }
+            });
+        }
+    }(window.scn.views.turkeyChallengeSubmitPopup = window.scn.views.turkeyChallengeSubmitPopup || {}));
+
+</script>
+<div id="popup" class="light-text" style="font-weight: bold;">
+    <div class="popup-header turkey-challenge"><div class="centered-container">
+        <span id="handicap-info-popup-title"><img src="turkey-challenge-title.png" /></span></div>
+    </div>
+    
+    <div style="margin-top: 45px; margin-left: 100px;">
+        <p>
+            1. Record your video<br />
+            2. Upload your video to YouTube<br />
+            3. Copy and Paste the YouTube URL below<br />
+            4. Tap Submit Video below!<br />
+        </p>
+        <div class="form-row">
+            <div class="form-label" style="text-align: center;">URL</div>
+            <div class="form-input"><input id="turkey-challenge-submit-popup-url" type="url" class="no-uppercase" style="width: 200px; padding: 10px;" /></div>
+        </div>
+        <div class="form-row">
+            <div class="form-label">&nbsp;</div>
+            <div class="form-input">
+                <div class="button-container float-right">
+                    <div class="medium-button tan-general-button" id="submit-button" style="width: 125px" data-tap="scn.views.turkeyChallengeSubmitPopup.submitUrl">
+                         <div style="float: left;">
+                            <img class="credit-icon" src="xcoin.png" style="width: 25px; float: left; padding-top: 5px;" />
+                            <span class="prize-cost" style="font-size: 18px; padding-top: 5px;">20</span>
+                        </div>
+                        <span class="two-line-text" id="submit-button-text">Submit<br />Video</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <img src="turkey-challenge-mascot.png" style="width: 200px; position: absolute; bottom: 0; left: 0;" />
+</div>

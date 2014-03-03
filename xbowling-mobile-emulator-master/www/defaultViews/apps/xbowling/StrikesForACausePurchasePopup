@@ -1,0 +1,146 @@
+<script type="text/javascript">
+    (function (strikesForACausePurchasePopup) {
+        strikesForACausePurchasePopup.viewModel = function () {
+            this.gamePacks = ko.observableArray([]);
+            this.loading = ko.observable(true);
+        },
+
+        strikesForACausePurchasePopup.load = function () {
+            scn.showLoading();
+
+            var viewModel = new strikesForACausePurchasePopup.viewModel();
+            ko.applyBindings(viewModel, this.get(0));
+
+            scn.ajax({
+                url: scn.apiAddress + "purchasable/gamepacks",
+                type: "GET",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+
+                    debugger;
+
+                    scn.hideLoading();
+                    viewModel.loading(false);
+
+                    viewModel.gamePacks.removeAll();
+                    for (var i = 0; i < data.length; i++) {
+                        data[i].priceDollars = data[i].priceUsPennies / 100;
+                        viewModel.gamePacks.push(data[i]);
+                    }
+
+                    // if coming from the payment profile page, we may have a package to buy
+                    // already selected...if so purchase it now
+                    var hashData = scn.viewEngine.getViewIdFromHash();
+                    if (hashData.params.packageId) {
+                        strikesForACausePurchasePopup.purchasePacakge(hashData.params.packageId);
+                    }
+                },
+                error: function (jqXhr, status) {
+                    scn.hideLoading();
+                    alert("An error occurred retrieving credit packages from the server.  Please try again.");
+                }
+            });
+        },
+
+        strikesForACausePurchasePopup.packageTap = function () {
+            var packageViewModel = ko.dataFor(this.element);
+            var packageId = packageViewModel.productId;
+            console.log("about to call purchasepackage: " + packageId);
+            strikesForACausePurchasePopup.purchasePacakge(packageId);
+        },
+
+        strikesForACausePurchasePopup.purchasePacakge = function (packageId) {
+            debugger;
+            console.log("package id: " + packageId);
+            scn.payment.purchase(packageId, strikesForACausePurchasePopup.purchase);
+        },
+
+        strikesForACausePurchasePopup.purchase = function (purchaseData) {
+            debugger;
+            // purchase data object has 3 props: transactionIdentifier, productId, transactionReceipt
+
+            scn.showLoading();
+            console.log("In purchase() -- preapring for creditpackagepurchase API");
+
+            var postUrl;
+            var postData;
+
+            if (purchaseData.type === scn.payment.PAYMENT_TYPE.IOS) {
+                if (!purchaseData.transactionIdentifier || !purchaseData.transactionReceipt || !purchaseData.productId) {
+                    alert("There was an error connecting to the store.  Please try again later.");
+                    return;
+                }
+
+                postUrl = scn.apiAddress + "gamepackpurchase/itunes";
+                postData = { productId: purchaseData.productId, transactionId: purchaseData.transactionIdentifier, receiptId: purchaseData.transactionReceipt };
+            } else if (purchaseData.type === scn.payment.PAYMENT_TYPE.ANDROID) {
+                if (!purchaseData.productId || !purchaseData.signedData || !purchaseData.signature) {
+                    alert("There was an error connecting to the store.  Please try again later.");
+                    return;
+                }
+
+                postUrl = scn.apiAddress + "gamepackpurchase/android";
+                postData = { productId: purchaseData.productId, signedData: purchaseData.signedData, signature: purchaseData.signature };
+            } else {
+                alert("We are very sorry, but an error occurred getting your purchase information.  Please contact XBowling support (support@xbowling.com)", { title: "Uh oh!" });
+                return;
+            }
+
+            scn.showLoading();
+            scn.ajax({
+                url: postUrl,
+                type: "POST",
+                data: postData,
+                success: function (data) {
+                    scn.hideLoading();
+
+                    strikesForACausePurchasePopup.doReturn(true);
+                },
+                error: function (jqXhr, status) {
+                    scn.hideLoading();
+                    alert("We are very sorry, but an error occurred recording your purchase.  Please contact XBowling support (support@xbowling.com).");
+                }
+            });
+        },
+
+        strikesForACausePurchasePopup.doReturn = function (purchaseMade) {
+            var elm = jQuery("#strikes-for-a-cause-purchase");
+            var viewModel = scn.popup.getViewModel(elm);
+            var returnViewModel = {
+                viewModel: viewModel,
+                purchaseMade: purchaseMade
+            };
+
+            scn.popup.hide(elm, returnViewModel);
+
+            var elm = jQuery("#strikes-for-a-cause-popup");
+            scn.popup.hide(elm);
+
+            scn.popup.show('StrikesForACausePopup');
+        }
+    }(window.scn.views.strikesForACausePurchasePopup = window.scn.views.strikesForACausePurchasePopup || {}));
+</script>
+<div id="strikes-for-a-cause-purchase" data-load="scn.views.strikesForACausePurchasePopup.load">
+    <div id="popup" >
+        <div class="popup-header"><div class="centered-container">
+        <span>Enter</span></div>
+    </div>
+        <br />
+        <div data-bind="foreach: gamePacks">
+             <button class="green-credit-button no-float" data-bind="tap: scn.views.strikesForACausePurchasePopup.packageTap" style="margin:2px 0 0 10px;">
+                <span class="call-to-action">
+                    <span data-bind="text: name"></span> FOR $
+                    <span data-bind="text: priceDollars"></span>
+                </span>
+            </button>
+        </div>
+        
+    </div>
+        
+    <div id="footer" class="font-interstate no-background" data-bind="visible: loading">
+            <div class="tap-to-purchase" id="buy-more-credits-loading">Loading Credit Packages. Please wait...</div>
+    </div>
+</div>
+ 
+

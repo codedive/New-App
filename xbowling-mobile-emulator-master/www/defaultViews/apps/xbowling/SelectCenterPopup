@@ -1,0 +1,608 @@
+<script type="text/javascript">
+    (function (selectCenterPopup) {
+        GEOLOCATION_SEARCH_DISTANCE_MILES = 25,
+        GEOLOCATION_TIMEOUT_MILLISECONDS = 5000,
+
+        _manualScoreVenues = {};
+
+        selectCenterPopup.viewModel = function (mode) {
+            this.selectedVenue = ko.observable();
+            this.selectedVenueName = ko.observable();
+            this.laneNumber = ko.observable();
+            this.bowlerName = ko.observable();
+            this.countriesHash = ko.observableArray();
+            this.selectedCountryId = ko.observable();
+            this.manualCenterInputName = ko.observable();
+            this.isManualInput = ko.observable(false);
+            this.mode = ko.observable(mode);
+        },
+
+        selectCenterPopup.load = function () {
+            var elm = jQuery(this);
+            var that = this;
+
+            // HACK -- Android <= 2.3 WebView has issues rendering select controls that are nested inside of an absolutley position
+            // element. This hack will (for Android only) remove the selects out of their absolutley positioned tree and position
+            // them absolutley in the body.
+            // If editing, remember since the selects are now out of the popup that they must be removed manually when the popup
+            // is destroyed or if we hide/show elements on this page!
+            if (!scn.isAppleDevice()) {
+                scn.showLoading();
+
+                setTimeout(function () {
+                    scn.hideLoading();
+
+                    var countrySelect = jQuery("#selectcenter-country", elm);
+                    var countrySelectPos = countrySelect.offset();
+                    countrySelect.detach();
+                    countrySelect.css("position", "absolute")
+                                 .css("z-index", "10000")
+                                 .css("top", countrySelectPos.top)
+                                 .css("left", countrySelectPos.left)
+                                 .css("width", "215px")
+                                 .css("height", "55px");
+
+
+                    var stateSelect = jQuery("#selectcenter-state", elm);
+                    var stateSelectPos = stateSelect.offset();
+                    stateSelect.detach();
+                    stateSelect.css("position", "absolute")
+                               .css("z-index", "10000")
+                               .css("top", stateSelectPos.top)
+                               .css("left", stateSelectPos.left)
+                               .css("width", "215px")
+                               .css("height", "55px");
+
+                    var centerSelect = jQuery("#selectcenter-center", elm);
+                    var centerSelectPos = centerSelect.offset();
+                    centerSelect.detach();
+                    centerSelect.css("position", "absolute")
+                                .css("z-index", "10000")
+                                .css("top", centerSelectPos.top)
+                                .css("left", centerSelectPos.left)
+                                .css("width", "215px")
+                                .css("height", "55px");
+
+                    var jqBody = jQuery(document.body);
+                    jqBody.append(countrySelect);
+                    jqBody.append(stateSelect);
+                    jqBody.append(centerSelect);
+
+                    continueLoad.call(that, elm);
+
+                    scn.popup.registerPopupDestructor(elm, function () {
+                        // make sure they are detached
+                        countrySelect.remove();
+                        stateSelect.remove();
+                        centerSelect.remove();
+                    });
+                }, 1000);
+            } else {
+                continueLoad.call(that, elm);
+            }
+        },
+
+        continueLoad = function (elm) {
+            jQuery("form", elm).bind("submit", selectCenterPopup.submitLaneCheckout);
+
+            if (scn.isAppleDevice()) {
+                jQuery("#selectcenter-country, #selectcenter-state, #selectcenter-center", elm).bind("change", function () {
+                    jQuery(this).blur();
+                });
+            }
+
+            scn.showLoading();
+
+            var popupViewModel = scn.popup.getViewModel(elm);
+            var vm = new selectCenterPopup.viewModel(popupViewModel ? popupViewModel.mode : "");
+            if (!elm.data("bound")) {
+                ko.applyBindings(vm, elm.get(0));
+                elm.data("bound", true);
+            }
+
+            var countrySelect = jQuery("#selectcenter-country");
+            var stateSelect = jQuery("#selectcenter-state");
+
+            stateSelect.change(function () {
+                selectCenterPopup.changeState();
+            });
+
+            countrySelect.change(function () {
+                selectCenterPopup.changeCountry(this.value, true);
+            });
+
+            var data = {};
+            if (vm.mode() == "livescores") {
+                data.scoringType = "Machine";
+            }
+
+            scn.ajax({
+                type: "GET",
+                url: scn.apiAddress + "venue/locations",
+                data: data,
+                dataType: "json",
+                success: function (countries) {
+                    var hashCountries = {};
+
+                    for (var i = 0; i < countries.length; ++i) {
+                        hashCountries[countries[i].countryId] = countries[i];
+                    }
+
+                    vm.countriesHash(hashCountries);
+
+                    countrySelect.children().detach();
+
+                    var usaId = 0;
+                    for (var i = 0; i < countries.length; i++) {
+                        if (countries[i].displayName.toLowerCase() === 'united states') {
+                            usaId = countries[i].countryId;
+                        }
+
+                        countrySelect.append(jQuery("<option />")
+                            .attr("value", countries[i].countryId)
+                            .text(countries[i].displayName));
+                    }
+
+                    // select the USA
+                    if (usaId) {
+                        countrySelect.val(usaId);
+                    }
+                    
+                    var gotLocationResponse = false;
+
+                    navigator.geolocation.getCurrentPosition(
+                       function (position) {
+                           if (gotLocationResponse)
+                               return;
+
+                           gotLocationResponse = true;
+
+                           var nearbyData = {};
+                           nearbyData.latitude = position.coords.latitude;
+                           nearbyData.longitude = position.coords.longitude;
+                           nearbyData.distanceLimitMiles = GEOLOCATION_SEARCH_DISTANCE_MILES;
+                           if (vm.mode() == "livescores") {
+                               nearbyData.scoringType = "Machine";
+                           }
+
+                           scn.ajax({
+                               type: "GET",
+                               url: scn.apiAddress + "venue/nearby",
+                               data: nearbyData,
+                               dataType: "json",
+                               success: function (venues) {
+                                   scn.hideLoading();
+
+                                   var closestVenue = venues.length > 0 ? venues[0] : null;
+                                   
+                                   // select closest
+                                   if (closestVenue) {
+                                       var foundCountry = false;
+                                       for (var i = 0; i < countries.length; i++) {
+                                           if (countries[i].displayName == closestVenue.address.country.countryDisplayName) {
+                                               var selectedCountry = countries[i];
+                                               foundCountry = true;
+
+                                               countrySelect.val(selectedCountry.countryId);
+                                               selectCenterPopup.changeCountry(selectedCountry.countryId, false, true);
+
+                                               var states = selectedCountry.states;
+                                               for (var j = 0; j < states.length; j++) {
+                                                   if (states[j].displayName == closestVenue.address.administrativeArea.longName) {
+                                                       stateSelect.val(states[j].displayName);
+                                                       selectCenterPopup.changeState(closestVenue);
+                                                       break;
+                                                   }
+                                               }
+                                           }
+                                       }
+
+                                       if (!foundCountry) {
+                                           // closest venue's country not found
+                                           selectCenterPopup.changeCountry(countrySelect.val());
+                                       }
+                                   } else {
+                                       // closest venue not found
+                                       selectCenterPopup.changeCountry(countrySelect.val());
+                                   }
+                               },
+                               error: function () {
+                                   scn.hideLoading();
+                                   console.log("Error loading nearby venues from API.");
+                                   selectCenterPopup.changeCountry(countrySelect.val());
+                               }
+                           });
+                       },
+                       function () {
+                           if (gotLocationResponse)
+                               return;
+
+                           gotLocationResponse = true;
+                           scn.hideLoading();
+
+                           // swallow error with geo-location
+                           console.log("Error getting geolocation.");
+
+                           selectCenterPopup.changeCountry(countrySelect.val());
+                       },
+                       {
+                           timeout: GEOLOCATION_TIMEOUT_MILLISECONDS,
+                       });
+
+                    setTimeout(function () {
+                        if (!gotLocationResponse) {
+                            gotLocationResponse = true;
+
+                            scn.hideLoading();
+                            console.log("Geolocation timeout");
+                            selectCenterPopup.changeCountry(countrySelect.val());
+                        }
+                    }, GEOLOCATION_TIMEOUT_MILLISECONDS);
+                },
+                error: function () {
+                    console.log("didn't get position");
+                    scn.hideLoading();
+
+                    alert("An error occurred loading Centers.  Please try again.");
+                }
+            });
+        },
+
+        selectCenterPopup.changeCountry = function (selectedCountry, noUpdateVal, noChangeState) {
+            var countrySelect = jQuery("#selectcenter-country");
+            var stateSelect = jQuery("#selectcenter-state");
+            var venueSelect = jQuery("#selectcenter-center");
+
+            if (!noUpdateVal) {
+                countrySelect.val(selectedCountry);
+            }
+
+            var viewModel = ko.dataFor(jQuery('#select-center-popup-wrapper').get(0));
+            viewModel.selectedCountryId(selectedCountry);
+            var countriesHash = viewModel.countriesHash();
+
+            jQuery("option", stateSelect).remove();
+
+            for (var j = 0; j < countriesHash[selectedCountry].states.length; j++) {
+                stateSelect.append(jQuery("<option />")
+                            .attr("value", countriesHash[selectedCountry].states[j].displayName)
+                            .text(countriesHash[selectedCountry].states[j].displayName));
+            }
+
+            if (!noChangeState) {
+                selectCenterPopup.changeState();
+            }
+
+        },
+
+        selectCenterPopup.changeState = function (closestVenue) {
+            var countrySelect = jQuery("#selectcenter-country");
+            var stateSelect = jQuery("#selectcenter-state");
+            var venueSelect = jQuery("#selectcenter-center");
+            var viewModel = ko.dataFor(jQuery('#select-center-popup-wrapper').get(0));
+            var countriesHash = viewModel.countriesHash();
+
+            scn.showLoading();
+
+            var data = {};
+            if (viewModel.mode() == "livescores") {
+                data.scoringType = "Machine";
+            }
+
+            scn.ajax({
+                type: "GET",
+                url: scn.apiAddress + "venue/locations/" + countriesHash[viewModel.selectedCountryId()].displayName + "/" + stateSelect.val(),
+                data: data,
+                dataType: "json",
+                success: function (data) {
+                    scn.hideLoading();
+
+                    venueSelect.children().remove();
+                    for (var i = 0; i < data.length; i++) {
+                        venueSelect.append(jQuery("<option />")
+                            .attr("value", data[i].id)
+                            .text(data[i].name));
+
+                        _manualScoreVenues[data[i].id] = (data[i].scoringType === "Manual");
+                    }
+
+                    if (closestVenue) {
+                        for (var i = 0; i < data.length; i++) {
+                            if (data[i].id == closestVenue.id) {
+                                venueSelect.val(data[i].id);
+                            }
+                        }
+                    }
+                },
+                error: function () {
+                    scn.hideLoading();
+                    alert("An error occurred while loading centers.  Please try again.");
+                    return;
+                }
+            });
+        },
+
+        selectCenterPopup.showLaneAndName = function () {
+            var viewModel = scn.popup.getViewModel(this);
+            var data = ko.dataFor(this);
+
+            jQuery("select").blur();
+
+            var venueSelect = jQuery("#selectcenter-center");
+            var venueId = parseInt(venueSelect.val());
+            data.selectedVenue(venueId);
+            data.selectedVenueName(jQuery("option:selected", venueSelect).text());
+
+            if (data.mode() == "livescores") {
+                scn.popup.hide(this, data);
+            } else {
+                data.isManualInput(_manualScoreVenues[venueId] ? true : false);
+
+                var lastName = localStorage.getItem("last-name");
+                if (lastName && lastName != null) {
+                    data.bowlerName(lastName);
+                }
+
+                jQuery('#geo-selection').addClass('hidden');
+
+                if (!scn.isAppleDevice()) {
+                    var countrySelect = jQuery("#selectcenter-country");
+                    var stateSelect = jQuery("#selectcenter-state");
+                    countrySelect.addClass("hidden");
+                    stateSelect.addClass("hidden");
+                    venueSelect.addClass("hidden");
+                }
+
+                jQuery('#lane-and-name').removeClass('hidden');
+                jQuery("#select-center-popup-title").text("Enter your Lane");
+            }
+        },
+
+        selectCenterPopup.showGeoSelection = function() {
+            jQuery('#geo-selection').removeClass('hidden');
+            jQuery('#lane-and-name').addClass('hidden');
+            jQuery("#select-center-popup-title").text("Select a Center");
+            jQuery("#manual-center-input").addClass("hidden");
+
+            if (!scn.isAppleDevice()) {
+                var countrySelect = jQuery("#selectcenter-country");
+                var stateSelect = jQuery("#selectcenter-state");
+                var venueSelect = jQuery("#selectcenter-center");
+                countrySelect.removeClass("hidden");
+                stateSelect.removeClass("hidden");
+                venueSelect.removeClass("hidden");
+            }
+        },
+
+        selectCenterPopup.validate = function() {
+            if (jQuery('#selectcenter-bowlername').val() === ''
+                || jQuery('#selectcenter-lane').val() === '') {
+                alert('Please enter bowler name and lane number');
+                return false;
+            }
+            return true;
+        },
+
+        selectCenterPopup.submitLaneCheckout = function() {
+            jQuery("input").blur();
+
+            if (!selectCenterPopup.validate()) {
+                return false;
+            }
+
+            scn.showLoading();
+
+            jQuery('#lane-and-name').addClass('hidden');
+            jQuery('#loading-message').removeClass('hidden');
+            jQuery("#select-center-popup-title").text("Sit Tight!");
+
+            // turn on confetti
+            //var confettiId = scn.confetti.render("#select-center-popup-wrapper > #popup");
+
+            viewModel = ko.dataFor(this);
+
+            localStorage.setItem("last-name", viewModel.bowlerName());
+
+            var model = {
+                venue: { id: viewModel.selectedVenue() },
+                bowlerName: viewModel.bowlerName(),
+                laneNumber: viewModel.laneNumber(),
+            };
+
+            var endpoint = "lanecheckout";
+
+            if (viewModel.isManualInput()) {
+                model.venueName = viewModel.manualCenterInputName();
+                endpoint = "manuallanecheckout";
+            }
+
+            scn.ajax({
+                url: scn.apiAddress + endpoint,
+                type: "POST",
+                data: model,
+                dataType: "json",
+                success: function (data) {
+                    scn.hideLoading();
+
+                    scn.viewEngine.registerViewDestructor(function () {
+                        // ensure the select center popup is closed
+                        try {
+                            var selectCenterPopup = jQuery("#select-center-popup-wrapper");
+                            if (selectCenterPopup && selectCenterPopup.length > 0) {
+                                scn.popup.hide(selectCenterPopup);
+                            } 
+                        } catch (e) {
+                        }
+                    });
+
+                    if (viewModel.isManualInput()) {
+                        scn.viewEngine.changeView('ManualInGameScreen?laneCheckout=' + data.id + "&bowlingGame=" + data.bowlingGame.id);
+                    } else {
+                        scn.viewEngine.changeView('new-2-InGameScreen?laneCheckout=' + data.id + "&bowlingGame=" + data.bowlingGame.id);
+                    }
+                },
+                error: function (jqXhr) {
+                    scn.hideLoading();
+                    if (jqXhr.status == 409) {
+                        alert("Another XBowler is already bowling on that lane with that name.  Did you type the wrong name?", {
+                            title: "Uh oh!",
+                            callback: function () {
+                                //scn.confetti.stop(confettiId);
+                                jQuery('#lane-and-name').removeClass('hidden');
+                                jQuery('#loading-message').addClass('hidden');
+                            }
+                        });
+                    } else {
+                        alert("It looks like something went wrong starting your game! Please try again later.", { title: "Uh oh!" });
+                    }
+                }
+            });
+
+            if (viewModel.isManualInput()) {
+                alert("It looks like the center you are in is not XBowling enabled. But don't worry! You will be able to enter your score manually by tapping each frame!", { title: "Hey There!" });
+            }
+
+            return false;
+        },
+
+        selectCenterPopup.cancel = function () {
+            var button = jQuery(this);
+            scn.popup.hide(button);
+        },
+
+        selectCenterPopup.showManualCenter = function () {
+            var popup = jQuery(this).parents("#popup:first");
+
+            var geoSelection = jQuery("#geo-selection", popup);
+            geoSelection.addClass("hidden");
+
+            var manualCenterInput = jQuery("#manual-center-input", popup);
+            manualCenterInput.removeClass("hidden");
+
+        },
+
+        selectCenterPopup.showManualCenterContinue = function () {
+            var viewModel = scn.popup.getViewModel(this);
+            var data = ko.dataFor(this);
+
+            data.isManualInput(true);
+
+            var lastName = localStorage.getItem("last-name");
+            if (lastName && lastName != null) {
+                data.bowlerName(lastName);
+            }
+
+            jQuery('#manual-center-input').addClass('hidden');
+
+            jQuery('#lane-and-name').removeClass('hidden');
+            jQuery("#select-center-popup-title").text("Enter your Lane");
+        }
+    }(window.scn.views.selectCenterPopup = window.scn.views.selectCenterPopup || {}));
+</script>
+
+<div id="select-center-popup-wrapper" data-load="scn.views.selectCenterPopup.load">
+    <div id="popup" class="popup-bg">
+        <div class="popup-header">
+             <div class="centered-container">
+                <span id="select-center-popup-title">Select a Center</span>
+             </div>
+        </div>
+        <div class="form-container">
+            <div class="popup-container" style="min-height: 200px">
+                <div id="geo-selection" style="margin-top: -10px;">
+                    <div class="form-row">
+                        <label class="form-label" for="selectcenter-country">Country:</label>
+                        <select id="selectcenter-country" class="form-input signup"></select>
+                    </div>
+                    <div class="form-row">
+                        <label class="form-label" for="selectcenter-state">State:</label>
+                        <select id="selectcenter-state" class="form-input signup"></select>
+                    </div>
+                    <div class="form-row">
+                        <label class="form-label" for="selectcenter-center">Center:</label>
+                        <select id="selectcenter-center" class="form-input signup"></select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="button-container  float-right">
+                            <div class="medium-button blue-general-button no-margin" type="submit" data-tap="scn.views.selectCenterPopup.showLaneAndName">
+                                <span>Continue</span>
+                            </div>
+                        </div>
+
+                        <!--div class="button-container float-right">
+                            <div class="medium-button red-general-button" data-tap="scn.views.selectCenterPopup.showManualCenter">
+                                <span class="two-line-text">Can't find<br />your center?</span>
+                            </div>
+                        </div-->
+                    </div>
+                </div>
+
+                <div id="manual-center-input" class="hidden">
+                    <form>
+                        <div class="form-row">
+                            <label class="form-label" for="manual-center-input-name">Center:</label>
+                            <input type="text" size="10" data-bind="value: manualCenterInputName" id="manual-center-input-name" class="form-input signup" title="Enter center name" placeholder="Enter center name" />
+                        </div>
+                        <div class="form-row">
+                            Since you are not bowling at an XBowling enabled center, you will have to manually input scores for each frame!
+                        </div>
+                        <div class="form-row">
+                           <br /><br />
+                           <div class="button-container float-right ">
+                                <div class="medium-button  blue-general-button no-margin" data-tap="scn.views.selectCenterPopup.showManualCenterContinue">
+                                    <span>Continue</span>
+                                </div>
+                            </div>
+                            <div class="button-container float-right">
+                                <div class="medium-button red-general-button" data-tap="scn.views.selectCenterPopup.showGeoSelection">
+                                    <span>Back</span>
+                                </div>
+                            </div>
+                            <button class="remove" type="submit">Continue</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="lane-and-name" class="hidden">
+                    <form>
+                        <div class="form-row">
+                            <label class="form-label" for="selectcenter-lane">Lane:</label>
+                            <input type="text" pattern="[0-9]*" size="10" data-bind="value: laneNumber" id="selectcenter-lane" class="form-input signup" title="Enter lane number" placeholder="Enter lane number" />
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label" for="selectcenter-bowlername">Name:</label>
+                            <input type="text" size="10" id="selectcenter-bowlername" data-bind="value: bowlerName" class="form-input signup" placeholder="Enter bowling name"/>
+                            <p class="light-text" style="font-size: small; clear: both; padding-top: 10px;">Name above must match name <br />on lane monitor</p>
+                        </div>
+                
+                        <div class="form-row">
+                           <br /><br />
+                           <div class="button-container float-right ">
+                                <div class="medium-button  blue-general-button no-margin" data-tap="scn.views.selectCenterPopup.submitLaneCheckout">
+                                    <span>Continue</span>
+                                </div>
+                            </div>
+                            <div class="button-container float-right">
+                                <div class="medium-button red-general-button" type="submit" data-tap="scn.views.selectCenterPopup.showGeoSelection">
+                                    <span>Back</span>
+                                </div>
+                            </div>
+                            <button class="remove" type="submit">Continue</button>
+                        </div>
+                    </form>
+                </div>
+       
+                <div id="loading-message" class="hidden">
+                    <div class="ready-to-bowl-container">
+                        <div class="ready-to-bowl">
+                            YOU ARE ALMOST
+                            <span>READY TO XBOWL</span>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>

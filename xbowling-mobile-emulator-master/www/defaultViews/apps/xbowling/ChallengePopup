@@ -1,0 +1,67 @@
+<script type="text/javascript">
+    (function (challengePopup) {
+        challengePopup.load = function () {
+            var elm = jQuery(this);
+
+            var scrollElm = elm.children("#challenge-popup-all:first");
+            scrollElm.height(scn.popup.getHeight(elm));
+
+            var viewModel = scn.popup.getViewModel(elm);
+            ko.applyBindings(viewModel, elm.get(0));
+
+            // scroll height for xbowl mania
+            if (viewModel.challengeUId().toUpperCase() === '64951A68-C83A-4275-924F-E7EFCD5E3AF2'
+                || viewModel.challengeUId().toUpperCase() === 'ED34A529-0039-43CA-80FE-44B7F684B992') {
+                var innerScroll = scrollElm.children().get(0);
+                jQuery(innerScroll).height(500);
+            }
+
+            var mainScroll = new iScroll(scrollElm.get(0), {
+                snap: false,
+                momentum: true,
+                hScroll: false,
+                hScrollbar: false,
+                vScroll: true,
+                vScrollbar: false
+            });
+
+            scn.popup.registerPopupDestructor(elm, function () {
+                if (mainScroll) {
+                    mainScroll.destroy();
+                    mainScroll = null;
+                }
+            });
+
+            if (mainScroll) {
+                mainScroll.refresh();
+            }
+        }
+    }(window.scn.views.challengePopup = window.scn.views.challengePopup || {}));
+</script>
+<div id="popup" data-load="scn.views.challengePopup.load" style="height: 275px">
+    <div class="popup-header">
+        <div class="centered-container">
+            <span>Information</span>
+        </div>
+    </div>
+    <div id="challenge-popup-all">
+        <div class="all-challenge-container">
+            <div class="single-challenge-container no-border challenge-detail">
+
+                <div class="icon challenge-icon" data-bind="css: color().toLowerCase() + '-challenge-button challenge-' + name().toLowerCase().replace(/\s/g, '-')" style="background-size: contain; background-repeat: no-repeat;">
+                    &nbsp;
+                </div>
+                <!--img src="challenge-beat-your-avg.png" /-->
+
+                <div class="challenge-desc-container challenge-detail">
+                    <h1 class="title" data-bind="text: name" style="margin: 0;"></h1>
+                    <div class="container">
+                    <div class="cost"><h1 class="light-text challenge-cost-container" style="margin: 0;">Credits: <span data-bind="text: creditCost"></span> <span class="xcoin"><img src="xcoin.png" width="20" /></span></h1></div>
+                    <div class="rewards" data-bind="visible: maxPoints() > 0"><h2 class="light-text" style="margin: 0;">Rewards <span style="color: #FFFFFF" data-bind="    visible: challengeUId().toUpperCase() === '64951A68-C83A-4275-924F-E7EFCD5E3AF2' || challengeUId().toUpperCase() === 'ED34A529-0039-43CA-80FE-44B7F684B992'">up to </span><span data-bind="    text: scn.addCommas(maxPoints())"></span><span class="pts"> PTS</span></h2></div>
+                    </div>
+                    <p data-bind="html: description"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
